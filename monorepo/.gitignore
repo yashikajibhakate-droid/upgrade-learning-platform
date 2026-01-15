@@ -1,0 +1,28 @@
+# Basics
+.DS_Store
+.env
+
+# Node
+node_modules/
+dist/
+build/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+
+# Java / Gradle
+.gradle/
+build/
+out/
+bin/
+*.class
+*.jar
+*.war
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+target/
