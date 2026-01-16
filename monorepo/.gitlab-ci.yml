@@ -1,0 +1,36 @@
+stages:
+  - test
+  - build
+
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+backend-test-build:
+  image: eclipse-temurin:17-jdk
+  stage: test
+  script:
+    - cd backend
+    - chmod +x gradlew
+    - ./gradlew test build -x test
+  artifacts:
+    paths:
+      - backend/build/libs/*.jar
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-backend"
+    paths:
+      - backend/.gradle
+
+frontend-build:
+  image: node:18
+  stage: build
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - frontend/dist
+  cache:
+    key: "$CI_COMMIT_REF_SLUG-frontend"
+    paths:
+      - frontend/node_modules
