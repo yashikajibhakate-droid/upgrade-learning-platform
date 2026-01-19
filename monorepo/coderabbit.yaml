@@ -1,0 +1,33 @@
+# CodeRabbit Configuration File
+# Documentation: https://coderabbit.ai/docs/configure-coderabbit
+
+version: "1.0"
+
+language: "en-US"
+
+# Review Settings
+reviews:
+  profile: "chill" # Options: "chill" (fewer comments), "assertive" (strict)
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: true # Adds a fun poem to the summary (optional, popular feature)
+  
+  # Automatic Review triggers
+  auto_review:
+    enabled: true
+    ignore_title_keywords:
+      - "WIP"
+      - "Draft"
+      - "release"
+    drafts: false # Do not auto-review draft PRs
+
+  # Static Analysis Tools
+  tools:
+    ast-grep:
+      enabled: true
+    shellcheck:
+      enabled: true
+
+# Chat Settings
+chat:
+  auto_reply: true
