@@ -12,7 +12,6 @@ RUN npm run build
 # Serve Stage
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
-# Use Nginx template feature for auto-env-substitution (Requires .template extension)
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-# Default Nginx entrypoint handles the templating and startup automatically
+CMD ["nginx", "-g", "daemon off;"]
