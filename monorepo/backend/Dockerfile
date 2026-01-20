@@ -4,8 +4,8 @@ WORKDIR /app
 COPY . .
 # Skip tests for faster build in this example, or remove -x test to run them
 RUN sed -i 's/package main.java./package /' src/main/java/com/example/app/controller/HomeController.java
-RUN ./gradlew spotlessApply
-RUN ./gradlew build -x test --no-daemon
+RUN gradle spotlessApply
+RUN gradle build -x test --no-daemon
 
 # Run Stage
 FROM eclipse-temurin:17-jre
