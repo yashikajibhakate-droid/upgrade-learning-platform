@@ -1,0 +1,30 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🛡️  Running Pre-push Checks..."
+
+# Frontend Tests
+echo "🟢 Running Frontend Tests..."
+cd frontend
+npm run test
+FRONTEND_EXIT_CODE=$?
+cd ..
+
+if [ $FRONTEND_EXIT_CODE -ne 0 ]; then
+  echo "❌ Frontend tests failed. Push aborted."
+  exit 1
+fi
+
+# Backend Tests
+echo "🟢 Running Backend Tests..."
+cd backend
+./gradlew test
+BACKEND_EXIT_CODE=$?
+cd ..
+
+if [ $BACKEND_EXIT_CODE -ne 0 ]; then
+  echo "❌ Backend tests failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ All checks passed. Pushing..."

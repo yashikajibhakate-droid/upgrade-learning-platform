@@ -1,4 +1,4 @@
-import React from 'react';
+
 import HealthComponent from './components/HealthComponent';
 
 function App() {
