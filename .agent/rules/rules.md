@@ -37,3 +37,4 @@ These rules are **non-negotiable** and apply to all future actions.
 - **Production-Ready**: Code is written for production, not just a demo.
 - **Simplicity**: Prefer the confusingly simple over the flexible but complex.
 - **Explicit**: Explicit configuration and code paths over implicit magic.
+- **Avoid over engineering**: Follow the given context and dont assume by yourself

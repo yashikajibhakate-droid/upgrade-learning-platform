@@ -1,15 +1,20 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import VerifyOtpPage from './pages/VerifyOtpPage';
+import HealthComponent from './components/HealthComponent'; // Keeping for debugging if needed
 
-import HealthComponent from './components/HealthComponent';
-
-function App() {
+const App = () => {
     return (
-        <div className="min-h-screen bg-gray-100 p-8 font-sans text-gray-800">
-            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-                <h1 className="text-3xl font-bold mb-4 text-blue-600">Monorepo App</h1>
-                <p className="mb-6 text-gray-600">Frontend running on Vite + React + TailwindCSS</p>
-                <HealthComponent />
-            </div>
-        </div>
+        <Router>
+            <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/verify-otp" element={<VerifyOtpPage />} />
+                <Route path="/health" element={<HealthComponent />} />
+            </Routes>
+        </Router>
     );
 }
 

@@ -8,7 +8,7 @@ const HealthComponent = () => {
     useEffect(() => {
         const fetchHealth = async () => {
             try {
-                const response = await api.get('/api/health');
+                const response = await api.get('/health');
                 setStatus(response.data);
             } catch (err) {
                 setError('Failed to connect to backend');
