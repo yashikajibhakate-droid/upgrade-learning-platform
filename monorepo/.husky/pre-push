@@ -1,11 +1,7 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-echo "🛡️  Running Pre-push Checks..."
-
 # Frontend Tests
 echo "🟢 Running Frontend Tests..."
-cd frontend
+cd monorepo/frontend
 npm run test
 FRONTEND_EXIT_CODE=$?
 cd ..
