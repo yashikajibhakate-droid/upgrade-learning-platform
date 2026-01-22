@@ -1,1 +1,1 @@
-npx --no -- commitlint --edit "$1"
+npm exec --prefix monorepo -- commitlint --config monorepo/commitlint.config.js --edit "$1"

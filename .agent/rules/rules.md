@@ -27,6 +27,7 @@ These rules are **non-negotiable** and apply to all future actions.
 - **Dead Code**: Strictly forbidden. Remove if unused.
 - **Error Handling**: Fail fast with clear, actionable error messages.
 - **Logging**: Use structured logging instead of `print` statements (except for defined CLI tools).
+- **Mandatory Testing**: Test cases must be written for all backend (JUnit/Mockito) and frontend (Vitest/RTL) code implemented.
 
 ## 4. Configuration
 - **Environment-Based**: Configuration must be injected via environment variables.

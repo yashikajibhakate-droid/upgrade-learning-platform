@@ -1,4 +1,1 @@
-npx lint-staged
-
-npx prettier --check "apps/**/.{ts,js,json,css,scss,html}" "libs/**/.{ts,js,json}" || { echo "❌ Formatting issues found. Run 'npm run format' to fix."; exit 1; }
-npx lint-staged
+cd monorepo && npx lint-staged
