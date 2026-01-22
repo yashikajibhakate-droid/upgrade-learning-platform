@@ -37,3 +37,7 @@ spotless {
         target 'src/*/java/**/*.java'
     }
 }
+
+tasks.named('jar') {
+	enabled = false
+}
