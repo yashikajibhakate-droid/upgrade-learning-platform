@@ -70,7 +70,7 @@ describe('VerifyOtpPage', () => {
         fireEvent.click(verifyButton);
 
         await waitFor(() => {
-            expect(api.post).toHaveBeenCalledWith('/auth/verify-otp', {
+            expect(api.post).toHaveBeenCalledWith('/api/auth/verify-otp', {
                 email: 'test@example.com',
                 otp: '012345'
             });
