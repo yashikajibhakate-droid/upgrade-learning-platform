@@ -3,7 +3,7 @@ FROM gradle:8.5-jdk17 AS builder
 WORKDIR /app
 COPY . .
 # Skip tests for faster build in this example, or remove -x test to run them
-RUN sed -i 's/package main.java./package /' src/main/java/com/example/app/controller/HomeController.java
+# Skip tests for faster build in this example, or remove -x test to run them
 RUN gradle spotlessApply
 RUN gradle build -x test --no-daemon
 
