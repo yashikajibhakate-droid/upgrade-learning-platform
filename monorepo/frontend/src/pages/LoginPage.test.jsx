@@ -57,7 +57,7 @@ describe('LoginPage', () => {
         expect(button).toHaveTextContent('Sending...');
 
         await waitFor(() => {
-            expect(api.post).toHaveBeenCalledWith('/auth/generate-otp', { email: 'test@example.com' });
+            expect(api.post).toHaveBeenCalledWith('/api/auth/generate-otp', { email: 'test@example.com' });
             expect(mockNavigate).toHaveBeenCalledWith('/verify-otp', { state: { email: 'test@example.com' } });
         });
     });

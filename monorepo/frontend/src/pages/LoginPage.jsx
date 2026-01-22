@@ -15,7 +15,7 @@ const LoginPage = () => {
         setError('');
 
         try {
-            await api.post('/auth/generate-otp', { email });
+            await api.post('/api/auth/generate-otp', { email });
             navigate('/verify-otp', { state: { email } });
         } catch (err) {
             console.error(err);
