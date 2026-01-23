@@ -13,6 +13,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import io.github.bucket4j.ConsumptionProbe;
+import static org.mockito.Mockito.mock;
+
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
 
@@ -22,8 +25,25 @@ class AuthControllerTest {
     @MockBean
     private AuthService authService;
 
+    @MockBean
+    private com.example.app.service.RateLimitingService rateLimitingService;
+
+    @Test
+    void testVerifyOtp_EmptyOtp_ReturnsBadRequest() throws Exception {
+        String jsonBody = "{\"email\": \"test@example.com\", \"otp\": \"\"}";
+
+        mockMvc.perform(post("/api/auth/verify-otp")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody))
+                .andExpect(status().isBadRequest());
+    }
+
     @Test
     void testGenerateOtp_ReturnsOk() throws Exception {
+        ConsumptionProbe probe = mock(ConsumptionProbe.class);
+        when(probe.isConsumed()).thenReturn(true);
+        when(rateLimitingService.resolveBucket(anyString())).thenReturn(probe);
+
         String jsonBody = "{\"email\": \"test@example.com\"}";
 
         mockMvc.perform(post("/api/auth/generate-otp")

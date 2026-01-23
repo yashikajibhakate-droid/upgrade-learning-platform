@@ -53,7 +53,7 @@ class AuthServiceTest {
     void testVerifyOtpAndLogin_Success_NewUser() {
         // Arrange
         String validOtp = "123456";
-        Otp otpEntity = new Otp(testEmail, validOtp, LocalDateTime.now().plusMinutes(5));
+        Otp otpEntity = new Otp(testEmail, Otp.hash(validOtp), LocalDateTime.now().plusMinutes(5));
 
         when(otpRepository.findTopByEmailOrderByExpiryTimeDesc(testEmail)).thenReturn(Optional.of(otpEntity));
         when(userRepository.findByEmail(testEmail)).thenReturn(Optional.empty()); // New user
@@ -71,7 +71,7 @@ class AuthServiceTest {
     void testVerifyOtpAndLogin_Failure_Expired() {
         // Arrange
         String expiredOtp = "123456";
-        Otp otpEntity = new Otp(testEmail, expiredOtp, LocalDateTime.now().minusMinutes(1)); // Expired
+        Otp otpEntity = new Otp(testEmail, Otp.hash(expiredOtp), LocalDateTime.now().minusMinutes(1)); // Expired
 
         when(otpRepository.findTopByEmailOrderByExpiryTimeDesc(testEmail)).thenReturn(Optional.of(otpEntity));
 
@@ -88,7 +88,7 @@ class AuthServiceTest {
         // Arrange
         String savedOtp = "123456";
         String inputOtp = "654321";
-        Otp otpEntity = new Otp(testEmail, savedOtp, LocalDateTime.now().plusMinutes(5));
+        Otp otpEntity = new Otp(testEmail, Otp.hash(savedOtp), LocalDateTime.now().plusMinutes(5));
 
         when(otpRepository.findTopByEmailOrderByExpiryTimeDesc(testEmail)).thenReturn(Optional.of(otpEntity));
 

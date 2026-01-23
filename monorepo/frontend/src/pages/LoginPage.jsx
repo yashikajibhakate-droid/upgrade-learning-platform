@@ -9,14 +9,30 @@ const LoginPage = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    const onInfoClick = () => {
+        console.log('Info/Help clicked');
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const trimmedEmail = email.trim();
+        if (!trimmedEmail) {
+            setError('Email is required');
+            return;
+        }
+
+        if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+            setError('Please enter a valid email address');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
         try {
-            await api.post('/api/auth/generate-otp', { email });
-            navigate('/verify-otp', { state: { email } });
+            await api.post('/api/auth/generate-otp', { email: trimmedEmail });
+            navigate('/verify-otp', { state: { email: trimmedEmail } });
         } catch (err) {
             console.error(err);
             setError('Failed to send OTP. Please try again.');
@@ -29,9 +45,14 @@ const LoginPage = () => {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative font-sans text-gray-900">
             {/* Top Right Info Icon - Dark Square style from SS */}
             <div className="absolute top-6 right-6">
-                <div className="bg-gray-800 text-white p-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                <button
+                    type="button"
+                    onClick={onInfoClick}
+                    aria-label="Show information"
+                    className="bg-gray-800 text-white p-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                >
                     <Info size={24} />
-                </div>
+                </button>
             </div>
 
             {/* Main Card */}
@@ -72,9 +93,14 @@ const LoginPage = () => {
 
             {/* Bottom Right Help */}
             <div className="absolute bottom-6 right-6">
-                <div className="bg-indigo-600 text-white p-2 rounded-full cursor-pointer hover:bg-indigo-700 shadow-lg transition-colors">
+                <button
+                    type="button"
+                    onClick={onInfoClick}
+                    aria-label="Get help"
+                    className="bg-indigo-600 text-white p-2 rounded-full cursor-pointer hover:bg-indigo-700 shadow-lg transition-colors"
+                >
                     <HelpCircle size={24} />
-                </div>
+                </button>
             </div>
         </div>
     );

@@ -16,7 +16,7 @@ public class Otp {
     private String email;
 
     @Column(nullable = false)
-    private String otpCode;
+    private String otpCodeHash;
 
     @Column(nullable = false)
     private LocalDateTime expiryTime;
@@ -24,9 +24,9 @@ public class Otp {
     public Otp() {
     }
 
-    public Otp(String email, String otpCode, LocalDateTime expiryTime) {
+    public Otp(String email, String otpCodeHash, LocalDateTime expiryTime) {
         this.email = email;
-        this.otpCode = otpCode;
+        this.otpCodeHash = otpCodeHash;
         this.expiryTime = expiryTime;
     }
 
@@ -38,8 +38,36 @@ public class Otp {
         return email;
     }
 
-    public String getOtpCode() {
-        return otpCode;
+    public boolean verifyOtp(String candidate) {
+        try {
+            String[] parts = this.otpCodeHash.split(":");
+            if (parts.length != 2)
+                return false;
+            String salt = parts[0];
+            String storedHash = parts[1];
+
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            String content = salt + candidate;
+            byte[] hash = digest.digest(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            String candidateHash = java.util.Base64.getEncoder().encodeToString(hash);
+
+            return storedHash.equals(candidateHash);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error verifying OTP", e);
+        }
+    }
+
+    public static String hash(String otp) {
+        try {
+            String salt = UUID.randomUUID().toString();
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            String content = salt + otp;
+            byte[] hash = digest.digest(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            String encodedHash = java.util.Base64.getEncoder().encodeToString(hash);
+            return salt + ":" + encodedHash;
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not supported", e);
+        }
     }
 
     public LocalDateTime getExpiryTime() {

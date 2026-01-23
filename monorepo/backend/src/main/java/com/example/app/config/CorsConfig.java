@@ -17,12 +17,12 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                String[] origins = allowedOrigins.split(",");
-                for (int i = 0; i < origins.length; i++) {
-                    if (origins[i].endsWith("/")) {
-                        origins[i] = origins[i].substring(0, origins[i].length() - 1);
-                    }
-                }
+                String[] origins = java.util.Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(s -> s.endsWith("/") ? s.substring(0, s.length() - 1) : s)
+                        .toArray(String[]::new);
+
                 registry
                         .addMapping("/**")
                         .allowedOrigins(origins)

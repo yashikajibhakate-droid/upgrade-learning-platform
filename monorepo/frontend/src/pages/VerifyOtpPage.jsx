@@ -14,22 +14,30 @@ const VerifyOtpPage = () => {
     const inputRefs = useRef([]);
 
     useEffect(() => {
+        if (!email) {
+            navigate('/login');
+            return;
+        }
+
         // Focus first input on mount
         if (inputRefs.current[0]) {
             inputRefs.current[0].focus();
         }
-    }, []);
+    }, [email, navigate]);
 
     const handleChange = (index, value) => {
-        // Allow only number
-        if (isNaN(value)) return;
+        // Take only the last character entered
+        const char = value.slice(-1);
+
+        // Allow empty (backspace) or single digit [0-9]
+        if (value && !/^[0-9]$/.test(char)) return;
 
         const newOtp = [...otp];
-        newOtp[index] = value.substring(value.length - 1); // Only take last char
+        newOtp[index] = char;
         setOtp(newOtp);
 
-        // Move to next input if value entered
-        if (value && index < 5 && inputRefs.current[index + 1]) {
+        // Move to next input if a digit was entered
+        if (char && index < 5 && inputRefs.current[index + 1]) {
             inputRefs.current[index + 1].focus();
         }
     };
@@ -43,18 +51,20 @@ const VerifyOtpPage = () => {
 
     const handlePaste = (e) => {
         e.preventDefault();
-        const pastedData = e.clipboardData.getData('text').slice(0, 6).split('');
-        if (pastedData.every(char => !isNaN(char))) {
-            const newOtp = [...otp];
-            pastedData.forEach((char, i) => {
-                if (i < 6) newOtp[i] = char;
-            });
-            setOtp(newOtp);
-            if (inputRefs.current[Math.min(pastedData.length, 5)]) {
-                inputRefs.current[Math.min(pastedData.length, 5)].focus();
-            }
+        const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6).split('');
+
+        const newOtp = [...otp];
+        pastedData.forEach((char, i) => {
+            newOtp[i] = char;
+        });
+        setOtp(newOtp);
+
+        const focusIndex = Math.min(pastedData.length - 1, 5);
+        if (focusIndex >= 0 && inputRefs.current[focusIndex]) {
+            inputRefs.current[focusIndex].focus();
         }
     };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();

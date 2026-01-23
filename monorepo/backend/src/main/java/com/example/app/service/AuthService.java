@@ -30,7 +30,7 @@ public class AuthService {
         LocalDateTime expiry = LocalDateTime.now().plusMinutes(5); // 5 min expiry
 
         // Save OTP
-        Otp otp = new Otp(email, otpCode, expiry);
+        Otp otp = new Otp(email, Otp.hash(otpCode), expiry);
         otpRepository.save(otp);
 
         // Send Email
@@ -49,7 +49,7 @@ public class AuthService {
         Otp otp = otpOpt.get();
 
         // 2. Validate Code & Expiry
-        if (!otp.getOtpCode().equals(otpCode) || otp.isExpired()) {
+        if (!otp.verifyOtp(otpCode) || otp.isExpired()) {
             return false;
         }
 
