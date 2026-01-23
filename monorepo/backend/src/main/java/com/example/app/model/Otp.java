@@ -48,10 +48,11 @@ public class Otp {
 
             java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
             String content = salt + candidate;
-            byte[] hash = digest.digest(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            String candidateHash = java.util.Base64.getEncoder().encodeToString(hash);
+            byte[] computedHash = digest.digest(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
-            return storedHash.equals(candidateHash);
+            byte[] storedHashBytes = java.util.Base64.getDecoder().decode(storedHash);
+
+            return java.security.MessageDigest.isEqual(storedHashBytes, computedHash);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new RuntimeException("Error verifying OTP", e);
         }
