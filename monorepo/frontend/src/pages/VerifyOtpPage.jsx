@@ -132,7 +132,29 @@ const VerifyOtpPage = () => {
                         {loading ? 'Verifying...' : 'Verify & Continue'}
                     </button>
 
-                    <div className="text-center">
+                    <div className="flex flex-col gap-3 text-center">
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                if (loading) return;
+                                setLoading(true); // Re-use loading or create separate if needed
+                                setError('');
+                                try {
+                                    await api.post('/api/auth/generate-otp', { email });
+                                    alert('New code sent to your email!');
+                                } catch (err) {
+                                    console.error(err);
+                                    setError('Failed to resend OTP. Please try again.');
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
+                            disabled={loading}
+                            className="text-indigo-600 hover:text-indigo-800 font-semibold text-sm transition-colors py-2"
+                        >
+                            Resend OTP
+                        </button>
+
                         <button
                             type="button"
                             onClick={() => navigate('/login')}

@@ -76,4 +76,25 @@ describe('VerifyOtpPage', () => {
             });
         });
     });
+
+    it('calls resend API when Resend OTP is clicked', async () => {
+        api.post.mockResolvedValueOnce({ status: 200 });
+        window.alert = vi.fn();
+
+        render(
+            <BrowserRouter>
+                <VerifyOtpPage />
+            </BrowserRouter>
+        );
+
+        const resendButton = screen.getByText(/Resend OTP/i);
+        fireEvent.click(resendButton);
+
+        await waitFor(() => {
+            expect(api.post).toHaveBeenCalledWith('/api/auth/generate-otp', {
+                email: 'test@example.com'
+            });
+            expect(window.alert).toHaveBeenCalledWith('New code sent to your email!');
+        });
+    });
 });
