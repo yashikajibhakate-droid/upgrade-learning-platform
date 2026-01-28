@@ -8,26 +8,27 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+  @Autowired
+  private JavaMailSender mailSender;
 
-    @org.springframework.beans.factory.annotation.Value("${app.mail.from}")
-    private String fromEmail;
+  @org.springframework.beans.factory.annotation.Value("${app.mail.from}")
+  private String fromEmail;
 
-    public void sendOtpEmail(String toEmail, String otp) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(toEmail);
-            message.setSubject("Your Login OTP");
-            message.setText("Your OTP for login is: " + otp + "\n\nThis code expires in 5 minutes.");
+  @org.springframework.scheduling.annotation.Async
+  public void sendOtpEmail(String toEmail, String otp) {
+    try {
+      SimpleMailMessage message = new SimpleMailMessage();
+      message.setFrom(fromEmail);
+      message.setTo(toEmail);
+      message.setSubject("Your Login OTP");
+      message.setText("Your OTP for login is: " + otp + "\n\nThis code expires in 5 minutes.");
 
-            mailSender.send(message);
-            System.out.println("Email sent successfully to: " + toEmail);
-        } catch (Exception e) {
-            System.err.println("Failed to send email: " + e.getMessage());
-            // Fallback to console for dev if email fails
-            System.out.println("fallback OTP: " + otp);
-        }
+      mailSender.send(message);
+      System.out.println("Email sent successfully to: " + toEmail);
+    } catch (Exception e) {
+      System.err.println("Failed to send email: " + e.getMessage());
+      // Fallback to console for dev if email fails
+      System.out.println("fallback OTP: " + otp);
     }
+  }
 }

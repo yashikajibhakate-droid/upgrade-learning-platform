@@ -68,7 +68,7 @@ const OnboardingPage = () => {
                 email: email,
                 interests: Array.from(selectedInterests)
             });
-            navigate('/'); // Redirect to Homepage
+            navigate('/recommendations', { state: { email: email } }); // Redirect to RecommendationsPage with email
         } catch (err) {
             console.error(err);
             setError('Failed to save preferences. Please try again.');

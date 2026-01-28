@@ -81,7 +81,11 @@ const VerifyOtpPage = () => {
             const response = await api.post('/api/auth/verify-otp', { email, otp: otpCode });
             if (response.status === 200) {
                 alert('Login Successful!');
-                navigate('/onboarding', { state: { email } });
+                if (response.data.hasInterests) {
+                    navigate('/recommendations', { state: { email } });
+                } else {
+                    navigate('/onboarding', { state: { email } });
+                }
             }
         } catch (err) {
             console.error(err);

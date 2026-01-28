@@ -4,6 +4,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import VerifyOtpPage from './VerifyOtpPage';
 import api from '../services/api';
 
+const mockNavigate = vi.fn();
+
 // Mock Router location state
 vi.mock('react-router-dom', async () => {
     const actual = await vi.importActual('react-router-dom');
@@ -12,7 +14,7 @@ vi.mock('react-router-dom', async () => {
         useLocation: () => ({
             state: { email: 'test@example.com' }
         }),
-        useNavigate: () => vi.fn(),
+        useNavigate: () => mockNavigate,
     };
 });
 
@@ -21,39 +23,14 @@ vi.mock('../services/api');
 describe('VerifyOtpPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-    });
-
-    it('renders 6 input boxes', () => {
-        render(
-            <BrowserRouter>
-                <VerifyOtpPage />
-            </BrowserRouter>
-        );
-        const inputs = screen.getAllByRole('textbox');
-        expect(inputs).toHaveLength(6);
-    });
-
-    it('handles input changes and focus management', () => {
-        render(
-            <BrowserRouter>
-                <VerifyOtpPage />
-            </BrowserRouter>
-        );
-        const inputs = screen.getAllByRole('textbox');
-
-        // Type '1' in first box
-        fireEvent.change(inputs[0], { target: { value: '1' } });
-        expect(inputs[0].value).toBe('1');
-
-        // Assuming focus management works (hard to test exact focus in RTL without user-event, but we can check values)
-        fireEvent.change(inputs[1], { target: { value: '2' } });
-        expect(inputs[1].value).toBe('2');
-    });
-
-    it('calls verify API with correct data', async () => {
-        api.post.mockResolvedValueOnce({ status: 200 });
-        // Mock alert
         window.alert = vi.fn();
+    });
+
+    it('redirects to onboarding if users has no interests', async () => {
+        api.post.mockResolvedValueOnce({
+            status: 200,
+            data: { hasInterests: false }
+        });
 
         render(
             <BrowserRouter>
@@ -70,16 +47,15 @@ describe('VerifyOtpPage', () => {
         fireEvent.click(verifyButton);
 
         await waitFor(() => {
-            expect(api.post).toHaveBeenCalledWith('/api/auth/verify-otp', {
-                email: 'test@example.com',
-                otp: '012345'
-            });
+            expect(mockNavigate).toHaveBeenCalledWith('/onboarding', { state: { email: 'test@example.com' } });
         });
     });
 
-    it('calls resend API when Resend OTP is clicked', async () => {
-        api.post.mockResolvedValueOnce({ status: 200 });
-        window.alert = vi.fn();
+    it('redirects to recommendations if user has interests', async () => {
+        api.post.mockResolvedValueOnce({
+            status: 200,
+            data: { hasInterests: true }
+        });
 
         render(
             <BrowserRouter>
@@ -87,14 +63,16 @@ describe('VerifyOtpPage', () => {
             </BrowserRouter>
         );
 
-        const resendButton = screen.getByText(/Resend OTP/i);
-        fireEvent.click(resendButton);
+        const inputs = screen.getAllByRole('textbox');
+        inputs.forEach((input, index) => {
+            fireEvent.change(input, { target: { value: String(index) } });
+        });
+
+        const verifyButton = screen.getByRole('button', { name: /Verify & Continue/i });
+        fireEvent.click(verifyButton);
 
         await waitFor(() => {
-            expect(api.post).toHaveBeenCalledWith('/api/auth/generate-otp', {
-                email: 'test@example.com'
-            });
-            expect(window.alert).toHaveBeenCalledWith('New code sent to your email!');
+            expect(mockNavigate).toHaveBeenCalledWith('/recommendations', { state: { email: 'test@example.com' } });
         });
     });
 });

@@ -1,8 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import LandingPage from './pages/LandingPage';
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import VerifyOtpPage from './pages/VerifyOtpPage';
+import RecommendationsPage from './pages/RecommendationsPage';
 import OnboardingPage from './pages/OnboardingPage';
 import HealthComponent from './components/HealthComponent'; // Keeping for debugging if needed
 
@@ -10,9 +11,10 @@ const App = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<LandingPage />} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/verify-otp" element={<VerifyOtpPage />} />
+                <Route path="/recommendations" element={<RecommendationsPage />} />
                 <Route path="/onboarding" element={<OnboardingPage />} />
                 <Route path="/health" element={<HealthComponent />} />
             </Routes>

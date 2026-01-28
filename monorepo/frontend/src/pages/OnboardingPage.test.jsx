@@ -101,7 +101,7 @@ describe('OnboardingPage', () => {
                 email: mockEmail,
                 interests: ['Tech']
             });
-            expect(mockNavigate).toHaveBeenCalledWith('/');
+            expect(mockNavigate).toHaveBeenCalledWith('/recommendations', { state: { email: mockEmail } });
         });
     });
 });
