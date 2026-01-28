@@ -18,6 +18,11 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_interests", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "interest")
+    private java.util.Set<String> interests = new java.util.HashSet<>();
+
     public User() {
     }
 
@@ -39,5 +44,13 @@ public class User {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public java.util.Set<String> getInterests() {
+        return interests;
+    }
+
+    public void setInterests(java.util.Set<String> interests) {
+        this.interests = interests;
     }
 }
