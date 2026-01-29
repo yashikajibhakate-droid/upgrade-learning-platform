@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Info, Code, BarChart, Palette, Megaphone, Server, Shield, Atom, Coins, Check } from 'lucide-react';
 import api from '../services/api';
+import InfoModal from '../components/InfoModal';
 
 const OnboardingPage = () => {
     const [interests, setInterests] = useState([]);
@@ -9,6 +10,7 @@ const OnboardingPage = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [isInfoOpen, setIsInfoOpen] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -57,6 +59,17 @@ const OnboardingPage = () => {
         setSelectedInterests(newSelected);
     };
 
+    const toggleInfo = () => {
+        setIsInfoOpen(!isInfoOpen);
+    };
+
+    const handleInfoKeyDown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleInfo();
+        }
+    };
+
     const handleContinue = async () => {
         if (selectedInterests.size === 0) return;
 
@@ -88,6 +101,10 @@ const OnboardingPage = () => {
                 <button
                     type="button"
                     aria-label="Show information"
+                    aria-expanded={isInfoOpen}
+                    aria-controls="info-modal"
+                    onClick={toggleInfo}
+                    onKeyDown={handleInfoKeyDown}
                     className="bg-gray-800 text-white p-2 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
                 >
                     <Info size={24} />
@@ -144,6 +161,8 @@ const OnboardingPage = () => {
                     {saving ? 'Saving...' : 'Continue'}
                 </button>
             </div>
+            {/* Info Modal */}
+            <InfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
         </div>
     );
 };

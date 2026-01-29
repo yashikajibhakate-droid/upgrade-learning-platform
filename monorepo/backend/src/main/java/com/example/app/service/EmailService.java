@@ -16,6 +16,11 @@ public class EmailService {
 
   @org.springframework.scheduling.annotation.Async
   public void sendOtpEmail(String toEmail, String otp) {
+    if (fromEmail == null || fromEmail.trim().isEmpty()) {
+      System.err.println("Email sending skipped: 'app.mail.from' is not configured.");
+      System.out.println("fallback OTP: " + otp);
+      return;
+    }
     try {
       SimpleMailMessage message = new SimpleMailMessage();
       message.setFrom(fromEmail);

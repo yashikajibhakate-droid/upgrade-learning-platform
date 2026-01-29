@@ -22,9 +22,11 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-  @MockBean private UserService userService;
+  @MockBean
+  private UserService userService;
 
   @Test
   void testGetInterests_ReturnsList() throws Exception {
@@ -93,5 +95,44 @@ class UserControllerTest {
                 .content(jsonBody))
         .andExpect(status().isBadRequest())
         .andExpect(content().string("User not found"));
+  }
+
+  @Test
+  void testSavePreferences_NullInterests_ReturnsBadRequest() throws Exception {
+    String jsonBody = "{\"email\": \"test@example.com\"}";
+
+    mockMvc
+        .perform(
+            post("/api/users/preferences")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string("Interests must be a valid list"));
+  }
+
+  @Test
+  void testSavePreferences_InvalidInterestsType_ReturnsBadRequest() throws Exception {
+    String jsonBody = "{\"email\": \"test@example.com\", \"interests\": \"NotAList\"}";
+
+    mockMvc
+        .perform(
+            post("/api/users/preferences")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string("Interests must be a valid list"));
+  }
+
+  @Test
+  void testSavePreferences_InvalidInterestElement_ReturnsBadRequest() throws Exception {
+    String jsonBody = "{\"email\": \"test@example.com\", \"interests\": [\"Tech\", 123]}";
+
+    mockMvc
+        .perform(
+            post("/api/users/preferences")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonBody))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().string("Interests must be a list of strings"));
   }
 }

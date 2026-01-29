@@ -75,4 +75,41 @@ describe('VerifyOtpPage', () => {
             expect(mockNavigate).toHaveBeenCalledWith('/recommendations', { state: { email: 'test@example.com' } });
         });
     });
+
+    it('clears stale digits when pasting a shorter OTP', () => {
+        render(
+            <BrowserRouter>
+                <VerifyOtpPage />
+            </BrowserRouter>
+        );
+
+        const inputs = screen.getAllByRole('textbox');
+
+        // 1. Enter initial 6 digits: '123456'
+        inputs.forEach((input, index) => {
+            fireEvent.change(input, { target: { value: String(index + 1) } });
+        });
+        expect(inputs[0].value).toBe('1');
+        expect(inputs[5].value).toBe('6');
+
+        // 2. Paste '99' into the first input
+        // Create a mock clipboard event
+        const pasteEvent = {
+            clipboardData: {
+                getData: () => '99',
+            },
+            preventDefault: vi.fn(),
+        };
+
+        fireEvent.paste(inputs[0], pasteEvent);
+
+        // 3. Assert: '9', '9', '', '', '', ''
+        expect(inputs[0].value).toBe('9');
+        expect(inputs[1].value).toBe('9');
+        expect(inputs[2].value).toBe('');
+        expect(inputs[3].value).toBe('');
+        expect(inputs[4].value).toBe('');
+        expect(inputs[5].value).toBe('');
+    });
 });
+

@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users")
 public class UserController {
 
-  private static final org.slf4j.Logger logger =
-      org.slf4j.LoggerFactory.getLogger(UserController.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserController.class);
 
-  @Autowired private UserService userService;
+  @Autowired
+  private UserService userService;
 
   @GetMapping("/interests")
   public ResponseEntity<List<String>> getInterests() {
@@ -24,13 +24,27 @@ public class UserController {
   @PostMapping("/preferences")
   public ResponseEntity<?> savePreferences(@RequestBody Map<String, Object> payload) {
     String email = (String) payload.get("email");
-    @SuppressWarnings("unchecked")
-    List<String> interestsList = (List<String>) payload.get("interests");
 
     if (email == null || email.isEmpty()) {
       return ResponseEntity.badRequest().body("Email is required");
     }
-    if (interestsList == null || interestsList.isEmpty()) {
+
+    Object interestsObj = payload.get("interests");
+    List<String> interestsList = new java.util.ArrayList<>();
+
+    if (interestsObj instanceof List<?>) {
+      for (Object item : (List<?>) interestsObj) {
+        if (item instanceof String) {
+          interestsList.add((String) item);
+        } else {
+          return ResponseEntity.badRequest().body("Interests must be a list of strings");
+        }
+      }
+    } else {
+      return ResponseEntity.badRequest().body("Interests must be a valid list");
+    }
+
+    if (interestsList.isEmpty()) {
       return ResponseEntity.badRequest().body("At least one interest is required");
     }
 

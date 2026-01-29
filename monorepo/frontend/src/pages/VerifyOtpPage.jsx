@@ -53,7 +53,7 @@ const VerifyOtpPage = () => {
         e.preventDefault();
         const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6).split('');
 
-        const newOtp = [...otp];
+        const newOtp = Array(6).fill('');
         pastedData.forEach((char, i) => {
             newOtp[i] = char;
         });
