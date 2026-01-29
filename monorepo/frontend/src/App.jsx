@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import VerifyOtpPage from './pages/VerifyOtpPage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import OnboardingPage from './pages/OnboardingPage';
+import EpisodePage from './pages/EpisodePage';
 import HealthComponent from './components/HealthComponent'; // Keeping for debugging if needed
 
 const App = () => {
@@ -16,6 +17,7 @@ const App = () => {
                 <Route path="/verify-otp" element={<VerifyOtpPage />} />
                 <Route path="/recommendations" element={<RecommendationsPage />} />
                 <Route path="/onboarding" element={<OnboardingPage />} />
+                <Route path="/series/:seriesId/watch" element={<EpisodePage />} />
                 <Route path="/health" element={<HealthComponent />} />
             </Routes>
         </Router>

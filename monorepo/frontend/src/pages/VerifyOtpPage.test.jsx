@@ -27,9 +27,10 @@ describe('VerifyOtpPage', () => {
     });
 
     it('redirects to onboarding if users has no interests', async () => {
+        const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
         api.post.mockResolvedValueOnce({
             status: 200,
-            data: { hasInterests: false }
+            data: { hasInterests: false, token: 'mock-token' }
         });
 
         render(
@@ -47,14 +48,18 @@ describe('VerifyOtpPage', () => {
         fireEvent.click(verifyButton);
 
         await waitFor(() => {
+            expect(setItemSpy).toHaveBeenCalledWith('authToken', 'mock-token');
+            expect(setItemSpy).toHaveBeenCalledWith('userEmail', 'test@example.com');
             expect(mockNavigate).toHaveBeenCalledWith('/onboarding', { state: { email: 'test@example.com' } });
         });
+        setItemSpy.mockRestore();
     });
 
     it('redirects to recommendations if user has interests', async () => {
+        const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
         api.post.mockResolvedValueOnce({
             status: 200,
-            data: { hasInterests: true }
+            data: { hasInterests: true, token: 'mock-token' }
         });
 
         render(
@@ -72,8 +77,11 @@ describe('VerifyOtpPage', () => {
         fireEvent.click(verifyButton);
 
         await waitFor(() => {
+            expect(setItemSpy).toHaveBeenCalledWith('authToken', 'mock-token');
+            expect(setItemSpy).toHaveBeenCalledWith('userEmail', 'test@example.com');
             expect(mockNavigate).toHaveBeenCalledWith('/recommendations', { state: { email: 'test@example.com' } });
         });
+        setItemSpy.mockRestore();
     });
 
     it('clears stale digits when pasting a shorter OTP', () => {

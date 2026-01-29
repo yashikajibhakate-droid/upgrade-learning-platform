@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, Play, Info } from 'lucide-react';
 import api from '../services/api';
+import LogoutButton from '../components/LogoutButton';
 
 const RecommendationsPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const email = location.state?.email;
+    const email = location.state?.email || localStorage.getItem('userEmail');
 
     const [recommendations, setRecommendations] = useState([]);
     const [others, setOthers] = useState([]);
@@ -47,8 +48,9 @@ const RecommendationsPage = () => {
                 <div className="flex items-center gap-4">
                     <span className="text-sm text-gray-500 hidden md:block">{email}</span>
                     <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">
-                        {email[0].toUpperCase()}
+                        {email ? email[0].toUpperCase() : '?'}
                     </div>
+                    <LogoutButton />
                 </div>
             </div>
 
@@ -89,8 +91,17 @@ const RecommendationsPage = () => {
 };
 
 const SeriesCard = ({ series }) => {
+    const navigate = useNavigate();
+
+    const handleWatch = () => {
+        navigate(`/series/${series.id}/watch`);
+    };
+
     return (
-        <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 group cursor-pointer group">
+        <div
+            onClick={handleWatch}
+            className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 group cursor-pointer group"
+        >
             {/* Thumbnail */}
             <div className="relative h-48 bg-gray-200 overflow-hidden">
                 <img
@@ -118,7 +129,13 @@ const SeriesCard = ({ series }) => {
                         <Clock size={14} className="mr-1" />
                         <span>3 Episodes</span> {/* Placeholder since we don't have episode count in series DTO yet */}
                     </div>
-                    <button className="text-indigo-600 text-sm font-bold hover:text-indigo-700">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleWatch();
+                        }}
+                        className="text-indigo-600 text-sm font-bold hover:text-indigo-700"
+                    >
                         Start Watching
                     </button>
                 </div>

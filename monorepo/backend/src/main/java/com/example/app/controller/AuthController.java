@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  @Autowired private AuthService authService;
+  @Autowired
+  private AuthService authService;
 
-  @Autowired private RateLimitingService rateLimitingService;
+  @Autowired
+  private RateLimitingService rateLimitingService;
 
   @PostMapping("/generate-otp")
   public ResponseEntity<?> generateOtp(@RequestBody Map<String, String> payload) {
@@ -53,14 +55,25 @@ public class AuthController {
     if (userOpt.isPresent()) {
       User user = userOpt.get();
       boolean hasInterests = user.getInterests() != null && !user.getInterests().isEmpty();
+      String token = authService.createSession(user);
       return ResponseEntity.ok()
           .body(
               Map.of(
                   "message", "Login successful",
                   "email", email,
+                  "token", token,
                   "hasInterests", hasInterests));
     } else {
       return ResponseEntity.status(401).body(Map.of("message", "Invalid or expired OTP"));
     }
+  }
+
+  @PostMapping("/logout")
+  public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
+    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+      String token = authHeader.substring(7);
+      authService.logout(token);
+    }
+    return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
   }
 }

@@ -22,7 +22,8 @@ public class Series {
 
   private String thumbnailUrl;
 
-  public Series() {}
+  public Series() {
+  }
 
   public Series(String title, String description, String category, String thumbnailUrl) {
     this.title = title;
@@ -33,6 +34,10 @@ public class Series {
 
   public UUID getId() {
     return id;
+  }
+
+  public void setId(UUID id) {
+    this.id = id;
   }
 
   public String getTitle() {
