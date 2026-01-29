@@ -20,7 +20,11 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	implementation 'org.postgresql:postgresql'
+	implementation 'com.bucket4j:bucket4j-core:8.7.0'
+	implementation 'com.github.ben-manes.caffeine:caffeine'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
@@ -34,4 +38,8 @@ spotless {
         googleJavaFormat()
         target 'src/*/java/**/*.java'
     }
+}
+
+tasks.named('jar') {
+	enabled = false
 }
