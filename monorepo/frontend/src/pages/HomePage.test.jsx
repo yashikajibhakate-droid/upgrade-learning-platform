@@ -19,7 +19,22 @@ describe('HomePage', () => {
         expect(screen.getByText(/Welcome to LearnSphere/i)).toBeInTheDocument();
     });
 
-    it('redirects to /recommendations when email is present', () => {
+    it('renders LandingPage when email is present but no token', () => {
+        render(
+            <MemoryRouter initialEntries={[{ pathname: '/', state: { email: 'test@example.com' } }]}>
+                <HomePage />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText(/Welcome to LearnSphere/i)).toBeInTheDocument();
+    });
+
+    it('redirects to /recommendations when both email and token are present', () => {
+        Storage.prototype.getItem = vi.fn((key) => {
+            if (key === 'authToken') return 'valid-token';
+            return null;
+        });
+
         render(
             <MemoryRouter initialEntries={[{ pathname: '/', state: { email: 'test@example.com' } }]}>
                 <Routes>

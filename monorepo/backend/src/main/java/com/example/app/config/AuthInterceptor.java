@@ -1,7 +1,7 @@
 package com.example.app.config;
 
 import com.example.app.model.Session;
-import com.example.app.repository.SessionRepository;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Optional;
@@ -13,7 +13,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class AuthInterceptor implements HandlerInterceptor {
 
     @Autowired
-    private SessionRepository sessionRepository;
+    private com.example.app.service.AuthService authService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -24,7 +24,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            Optional<Session> session = sessionRepository.findByToken(token);
+            Optional<Session> session = authService.getSession(token);
             if (session.isPresent()) {
                 request.setAttribute("user", session.get().getUser());
                 return true;

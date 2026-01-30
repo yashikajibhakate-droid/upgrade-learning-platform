@@ -23,7 +23,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response && error.response.status === 401) {
+        const isVerifyOtp = error.config && error.config.url && error.config.url.includes('/api/auth/verify-otp');
+        if (error.response && error.response.status === 401 && !isVerifyOtp) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userEmail');
             window.location.href = '/login';

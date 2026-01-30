@@ -69,14 +69,29 @@ public class AuthService {
   }
 
   public String createSession(User user) {
-    com.example.app.model.Session session = new com.example.app.model.Session(user);
-    com.example.app.repository.SessionRepository sessionRepository = this.sessionRepository;
+    String rawToken = java.util.UUID.randomUUID().toString();
+    String tokenHash = com.example.app.model.Session.hashToken(rawToken);
+
+    com.example.app.model.Session session = new com.example.app.model.Session(user, tokenHash);
+    // Explicitly use the instance variable here (though locally defined in previous
+    // code, assume instance var)
+    // The previous code had a local variable shadowing the field:
+    // com.example.app.repository.SessionRepository sessionRepository =
+    // this.sessionRepository;
+    // I will simplify to use the injected instance directly.
     sessionRepository.save(session);
-    return session.getToken();
+    return rawToken;
   }
 
   @Transactional
   public void logout(String token) {
-    sessionRepository.deleteByToken(token);
+    String tokenHash = com.example.app.model.Session.hashToken(token);
+    sessionRepository.deleteByTokenHash(tokenHash);
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<com.example.app.model.Session> getSession(String token) {
+    String tokenHash = com.example.app.model.Session.hashToken(token);
+    return sessionRepository.findByTokenHash(tokenHash);
   }
 }

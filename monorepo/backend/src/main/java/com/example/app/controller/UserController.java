@@ -35,7 +35,11 @@ public class UserController {
     if (interestsObj instanceof List<?>) {
       for (Object item : (List<?>) interestsObj) {
         if (item instanceof String) {
-          interestsList.add((String) item);
+          String trimmed = ((String) item).trim();
+          if (trimmed.isEmpty()) {
+            return ResponseEntity.badRequest().body("Interests must be non-blank strings");
+          }
+          interestsList.add(trimmed);
         } else {
           return ResponseEntity.badRequest().body("Interests must be a list of strings");
         }

@@ -36,12 +36,11 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title }) => {
 
     const togglePlay = () => {
         if (videoRef.current) {
-            if (isPlaying) {
-                videoRef.current.pause();
+            if (videoRef.current.paused) {
+                videoRef.current.play().catch(e => console.error("Error playing video:", e));
             } else {
-                videoRef.current.play();
+                videoRef.current.pause();
             }
-            setIsPlaying(!isPlaying);
         }
     };
 
@@ -88,13 +87,30 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title }) => {
         }
     };
 
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+
+        const container = containerRef.current;
+        if (container) {
+            container.addEventListener('fullscreenchange', handleFullscreenChange);
+        }
+
+        return () => {
+            if (container) {
+                container.removeEventListener('fullscreenchange', handleFullscreenChange);
+            }
+        };
+    }, []);
+
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
-            containerRef.current.requestFullscreen();
-            setIsFullscreen(true);
+            containerRef.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
         } else {
             document.exitFullscreen();
-            setIsFullscreen(false);
         }
     };
 
@@ -130,6 +146,8 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title }) => {
                     className="w-full h-full object-contain"
                     onTimeUpdate={handleTimeUpdate}
                     onLoadedMetadata={handleLoadedMetadata}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
                     onEnded={onEnded}
                     onError={handleError}
                     onClick={togglePlay}

@@ -51,7 +51,10 @@ class SeriesControllerTest {
 
         mockMvc.perform(get("/api/series/" + seriesId + "/episodes"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[{\"title\":\"Test Episode\",\"sequenceNumber\":1}]"));
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$[0].title")
+                        .value("Test Episode"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$[0].sequenceNumber").value(1));
     }
 
     @Test

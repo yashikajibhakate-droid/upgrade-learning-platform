@@ -70,10 +70,16 @@ public class AuthController {
 
   @PostMapping("/logout")
   public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-      String token = authHeader.substring(7);
-      authService.logout(token);
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      return ResponseEntity.status(401)
+          .body(Map.of("error", "Invalid or missing Authorization header"));
     }
+    String token = authHeader.substring(7);
+    if (token.isEmpty()) {
+      return ResponseEntity.status(401)
+          .body(Map.of("error", "Invalid or missing Authorization header"));
+    }
+    authService.logout(token);
     return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
   }
 }

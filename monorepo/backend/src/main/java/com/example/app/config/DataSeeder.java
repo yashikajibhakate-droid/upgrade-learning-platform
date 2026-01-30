@@ -90,37 +90,41 @@ public class DataSeeder implements CommandLineRunner {
                 series = seriesRepository.save(series);
 
                 // Ensure episodes exist or update them
-                java.util.List<Episode> episodes = episodeRepository
+                ensureEpisodes(series);
+        }
+
+        private void ensureEpisodes(Series series) {
+                java.util.List<Episode> existingEpisodes = episodeRepository
                                 .findBySeriesIdOrderBySequenceNumberAsc(series.getId());
 
-                if (episodes.isEmpty()) {
-                        createEpisodes(series);
+                createOrUpdateEpisode(series, existingEpisodes, 1, "Episode 1: Intro",
+                                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                                600);
+                createOrUpdateEpisode(series, existingEpisodes, 2, "Episode 2: Deep Dive",
+                                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+                                1200);
+                createOrUpdateEpisode(series, existingEpisodes, 3, "Episode 3: Conclusion",
+                                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+                                900);
+        }
+
+        private void createOrUpdateEpisode(Series series, java.util.List<Episode> existingEpisodes,
+                        int sequenceNumber, String title, String videoUrl, int duration) {
+                Episode episode = existingEpisodes.stream()
+                                .filter(e -> {
+                                        Integer seq = e.getSequenceNumber();
+                                        return seq != null && seq == sequenceNumber;
+                                })
+                                .findFirst()
+                                .orElse(null);
+
+                if (episode == null) {
+                        episode = new Episode(series, title, videoUrl, duration, sequenceNumber);
                 } else {
-                        updateEpisodes(episodes);
+                        episode.setTitle(title);
+                        episode.setVideoUrl(videoUrl);
+                        episode.setDurationSeconds(duration);
                 }
-        }
-
-        private void createEpisodes(Series series) {
-                episodeRepository.save(new Episode(series, "Episode 1: Intro",
-                                "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                                600, 1));
-                episodeRepository.save(new Episode(series, "Episode 2: Deep Dive",
-                                "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                                1200, 2));
-                episodeRepository.save(new Episode(series, "Episode 3: Conclusion",
-                                "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-                                900, 3));
-        }
-
-        private void updateEpisodes(java.util.List<Episode> episodes) {
-                for (Episode ep : episodes) {
-                        if (ep.getSequenceNumber() == 1)
-                                ep.setVideoUrl("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
-                        else if (ep.getSequenceNumber() == 2)
-                                ep.setVideoUrl("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4");
-                        else if (ep.getSequenceNumber() == 3)
-                                ep.setVideoUrl("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
-                        episodeRepository.save(ep);
-                }
+                episodeRepository.save(episode);
         }
 }
