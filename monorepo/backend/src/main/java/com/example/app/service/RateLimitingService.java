@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class RateLimitingService {
 
-  private final Cache<String, Bucket> buckets =
-      Caffeine.newBuilder().maximumSize(1000).expireAfterAccess(1, TimeUnit.HOURS).build();
+  private final Cache<String, Bucket> buckets = Caffeine.newBuilder().maximumSize(1000)
+      .expireAfterAccess(1, TimeUnit.HOURS).build();
 
   public ConsumptionProbe resolveBucket(String key) {
     // In a distributed environment (multiple instances), you should use a
@@ -31,19 +31,19 @@ public class RateLimitingService {
     return Bucket.builder()
         .addLimit(
             Bandwidth.builder()
-                .capacity(1)
-                .refillGreedy(1, Duration.ofSeconds(60))
-                .build()) // 1 per min
-        .addLimit(
-            Bandwidth.builder()
                 .capacity(5)
-                .refillGreedy(5, Duration.ofHours(1))
-                .build()) // 5 per hour
+                .refillGreedy(5, Duration.ofSeconds(60))
+                .build()) // 5 per min
         .addLimit(
             Bandwidth.builder()
                 .capacity(20)
-                .refillGreedy(20, Duration.ofDays(1))
-                .build()) // 20 per day
+                .refillGreedy(20, Duration.ofHours(1))
+                .build()) // 20 per hour
+        .addLimit(
+            Bandwidth.builder()
+                .capacity(50)
+                .refillGreedy(50, Duration.ofDays(1))
+                .build()) // 50 per day
         .build();
   }
 }

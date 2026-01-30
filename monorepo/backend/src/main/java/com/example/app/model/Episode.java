@@ -11,6 +11,7 @@ public class Episode {
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
+  @com.fasterxml.jackson.annotation.JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "series_id", nullable = false)
   private Series series;
@@ -24,7 +25,8 @@ public class Episode {
 
   private Integer sequenceNumber;
 
-  public Episode() {}
+  public Episode() {
+  }
 
   public Episode(
       Series series,

@@ -14,11 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthService {
 
-  @Autowired private UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
 
-  @Autowired private OtpRepository otpRepository;
+  @Autowired
+  private OtpRepository otpRepository;
 
-  @Autowired private EmailService emailService;
+  @Autowired
+  private com.example.app.repository.SessionRepository sessionRepository;
+
+  @Autowired
+  private EmailService emailService;
 
   public void generateAndSendOtp(String email) {
     // Generate 6-digit OTP
@@ -60,5 +66,17 @@ public class AuthService {
     otpRepository.deleteByEmail(email);
 
     return Optional.of(user);
+  }
+
+  public String createSession(User user) {
+    com.example.app.model.Session session = new com.example.app.model.Session(user);
+    com.example.app.repository.SessionRepository sessionRepository = this.sessionRepository;
+    sessionRepository.save(session);
+    return session.getToken();
+  }
+
+  @Transactional
+  public void logout(String token) {
+    sessionRepository.deleteByToken(token);
   }
 }

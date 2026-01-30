@@ -53,7 +53,7 @@ const VerifyOtpPage = () => {
         e.preventDefault();
         const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6).split('');
 
-        const newOtp = [...otp];
+        const newOtp = Array(6).fill('');
         pastedData.forEach((char, i) => {
             newOtp[i] = char;
         });
@@ -81,6 +81,9 @@ const VerifyOtpPage = () => {
             const response = await api.post('/api/auth/verify-otp', { email, otp: otpCode });
             if (response.status === 200) {
                 alert('Login Successful!');
+                localStorage.setItem('authToken', response.data.token);
+                localStorage.setItem('userEmail', email);
+
                 if (response.data.hasInterests) {
                     navigate('/recommendations', { state: { email } });
                 } else {

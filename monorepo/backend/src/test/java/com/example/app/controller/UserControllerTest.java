@@ -22,76 +22,125 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 
-  @Autowired private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-  @MockBean private UserService userService;
+    @MockBean
+    private UserService userService;
 
-  @Test
-  void testGetInterests_ReturnsList() throws Exception {
-    List<String> interests = List.of("Tech", "Art");
-    when(userService.getAvailableInterests()).thenReturn(interests);
+    @MockBean
+    private com.example.app.config.AuthInterceptor authInterceptor;
 
-    mockMvc
-        .perform(get("/api/users/interests"))
-        .andExpect(status().isOk())
-        .andExpect(content().json("[\"Tech\", \"Art\"]"));
-  }
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() throws Exception {
+        when(authInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+    }
 
-  @Test
-  void testSavePreferences_Success() throws Exception {
-    String jsonBody = "{\"email\": \"test@example.com\", \"interests\": [\"Tech\", \"Design\"]}";
+    @Test
+    void testGetInterests_ReturnsList() throws Exception {
+        List<String> interests = List.of("Tech", "Art");
+        when(userService.getAvailableInterests()).thenReturn(interests);
 
-    mockMvc
-        .perform(
-            post("/api/users/preferences")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonBody))
-        .andExpect(status().isOk())
-        .andExpect(content().string("Interests updated successfully"));
+        mockMvc
+                .perform(get("/api/users/interests"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[\"Tech\", \"Art\"]"));
+    }
 
-    verify(userService).updateInterests(eq("test@example.com"), any());
-  }
+    @Test
+    void testSavePreferences_Success() throws Exception {
+        String jsonBody = "{\"email\": \"test@example.com\", \"interests\": [\"Tech\", \"Design\"]}";
 
-  @Test
-  void testSavePreferences_MissingEmail_ReturnsBadRequest() throws Exception {
-    String jsonBody = "{\"interests\": [\"Tech\"]}";
+        mockMvc
+                .perform(
+                        post("/api/users/preferences")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Interests updated successfully"));
 
-    mockMvc
-        .perform(
-            post("/api/users/preferences")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonBody))
-        .andExpect(status().isBadRequest())
-        .andExpect(content().string("Email is required"));
-  }
+        verify(userService).updateInterests(eq("test@example.com"), any());
+    }
 
-  @Test
-  void testSavePreferences_EmptyInterests_ReturnsBadRequest() throws Exception {
-    String jsonBody = "{\"email\": \"test@example.com\", \"interests\": []}";
+    @Test
+    void testSavePreferences_MissingEmail_ReturnsBadRequest() throws Exception {
+        String jsonBody = "{\"interests\": [\"Tech\"]}";
 
-    mockMvc
-        .perform(
-            post("/api/users/preferences")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonBody))
-        .andExpect(status().isBadRequest())
-        .andExpect(content().string("At least one interest is required"));
-  }
+        mockMvc
+                .perform(
+                        post("/api/users/preferences")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Email is required"));
+    }
 
-  @Test
-  void testSavePreferences_UserNotFound_ReturnsBadRequest() throws Exception {
-    String jsonBody = "{\"email\": \"unknown@example.com\", \"interests\": [\"Tech\"]}";
+    @Test
+    void testSavePreferences_EmptyInterests_ReturnsBadRequest() throws Exception {
+        String jsonBody = "{\"email\": \"test@example.com\", \"interests\": []}";
 
-    doThrow(new IllegalArgumentException("User not found"))
-        .when(userService)
-        .updateInterests(any(), any());
+        mockMvc
+                .perform(
+                        post("/api/users/preferences")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("At least one interest is required"));
+    }
 
-    mockMvc
-        .perform(
-            post("/api/users/preferences")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonBody))
-        .andExpect(status().isBadRequest())
-        .andExpect(content().string("User not found"));
-  }
+    @Test
+    void testSavePreferences_UserNotFound_ReturnsBadRequest() throws Exception {
+        String jsonBody = "{\"email\": \"unknown@example.com\", \"interests\": [\"Tech\"]}";
+
+        doThrow(new IllegalArgumentException("User not found"))
+                .when(userService)
+                .updateInterests(any(), any());
+
+        mockMvc
+                .perform(
+                        post("/api/users/preferences")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("User not found"));
+    }
+
+    @Test
+    void testSavePreferences_NullInterests_ReturnsBadRequest() throws Exception {
+        String jsonBody = "{\"email\": \"test@example.com\"}";
+
+        mockMvc
+                .perform(
+                        post("/api/users/preferences")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Interests must be a valid list"));
+    }
+
+    @Test
+    void testSavePreferences_InvalidInterestsType_ReturnsBadRequest() throws Exception {
+        String jsonBody = "{\"email\": \"test@example.com\", \"interests\": \"NotAList\"}";
+
+        mockMvc
+                .perform(
+                        post("/api/users/preferences")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Interests must be a valid list"));
+    }
+
+    @Test
+    void testSavePreferences_InvalidInterestElement_ReturnsBadRequest() throws Exception {
+        String jsonBody = "{\"email\": \"test@example.com\", \"interests\": [\"Tech\", 123]}";
+
+        mockMvc
+                .perform(
+                        post("/api/users/preferences")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(jsonBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Interests must be a list of strings"));
+    }
 }

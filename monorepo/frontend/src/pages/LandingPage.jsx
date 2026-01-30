@@ -40,7 +40,15 @@ const LandingPage = () => {
                 {/* Button Section */}
                 <div className="mb-8">
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => {
+                            const token = localStorage.getItem('authToken');
+                            const email = localStorage.getItem('userEmail');
+                            if (token && email) {
+                                navigate('/recommendations', { state: { email } });
+                            } else {
+                                navigate('/login');
+                            }
+                        }}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-12 rounded-xl text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                     >
                         Get Started

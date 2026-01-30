@@ -104,4 +104,56 @@ describe('OnboardingPage', () => {
             expect(mockNavigate).toHaveBeenCalledWith('/recommendations', { state: { email: mockEmail } });
         });
     });
+
+    it('opens info modal when info button is clicked', async () => {
+        render(
+            <MemoryRouter initialEntries={[{ pathname: '/onboarding', state: { email: mockEmail } }]}>
+                <Routes>
+                    <Route path="/onboarding" element={<OnboardingPage />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        const infoButton = await screen.findByLabelText(/Show information/i);
+        fireEvent.click(infoButton);
+
+        expect(screen.getByText('Why choose interests?')).toBeInTheDocument();
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('opens info modal when Enter key is pressed on info button', async () => {
+        render(
+            <MemoryRouter initialEntries={[{ pathname: '/onboarding', state: { email: mockEmail } }]}>
+                <Routes>
+                    <Route path="/onboarding" element={<OnboardingPage />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        const infoButton = await screen.findByLabelText(/Show information/i);
+        fireEvent.keyDown(infoButton, { key: 'Enter', code: 'Enter' });
+
+        expect(screen.getByText('Why choose interests?')).toBeInTheDocument();
+    });
+
+    it('closes info modal when close button is clicked', async () => {
+        render(
+            <MemoryRouter initialEntries={[{ pathname: '/onboarding', state: { email: mockEmail } }]}>
+                <Routes>
+                    <Route path="/onboarding" element={<OnboardingPage />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        // Open modal
+        const infoButton = await screen.findByLabelText(/Show information/i);
+        fireEvent.click(infoButton);
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+        // Close modal
+        const closeButton = screen.getByLabelText(/Close modal/i);
+        fireEvent.click(closeButton);
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
 });
