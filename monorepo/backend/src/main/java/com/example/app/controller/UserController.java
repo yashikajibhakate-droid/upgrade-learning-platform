@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users")
 public class UserController {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserController.class);
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(UserController.class);
 
-  @Autowired
-  private UserService userService;
+  @Autowired private UserService userService;
 
   @GetMapping("/interests")
   public ResponseEntity<List<String>> getInterests() {

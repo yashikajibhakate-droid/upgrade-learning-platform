@@ -8,13 +8,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
-  @Autowired
-  private JavaMailSender mailSender;
+  @Autowired private JavaMailSender mailSender;
 
   @org.springframework.beans.factory.annotation.Value("${app.mail.from}")
   private String fromEmail;
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EmailService.class);
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(EmailService.class);
 
   @org.springframework.scheduling.annotation.Async
   public void sendOtpEmail(String toEmail, String otp) {

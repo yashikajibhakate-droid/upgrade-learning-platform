@@ -14,17 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthService {
 
-  @Autowired
-  private UserRepository userRepository;
+  @Autowired private UserRepository userRepository;
 
-  @Autowired
-  private OtpRepository otpRepository;
+  @Autowired private OtpRepository otpRepository;
 
-  @Autowired
-  private com.example.app.repository.SessionRepository sessionRepository;
+  @Autowired private com.example.app.repository.SessionRepository sessionRepository;
 
-  @Autowired
-  private EmailService emailService;
+  @Autowired private EmailService emailService;
 
   public void generateAndSendOtp(String email) {
     // Generate 6-digit OTP

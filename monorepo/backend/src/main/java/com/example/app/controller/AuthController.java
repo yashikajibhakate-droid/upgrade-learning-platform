@@ -14,11 +14,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  @Autowired
-  private AuthService authService;
+  @Autowired private AuthService authService;
 
-  @Autowired
-  private RateLimitingService rateLimitingService;
+  @Autowired private RateLimitingService rateLimitingService;
 
   @PostMapping("/generate-otp")
   public ResponseEntity<?> generateOtp(@RequestBody Map<String, String> payload) {

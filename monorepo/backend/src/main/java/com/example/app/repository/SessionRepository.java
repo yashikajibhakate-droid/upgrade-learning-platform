@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SessionRepository extends JpaRepository<Session, Long> {
 
-    @Query("SELECT s FROM Session s JOIN FETCH s.user WHERE s.tokenHash = :tokenHash")
-    Optional<Session> findByTokenHash(@Param("tokenHash") String tokenHash);
+  @Query("SELECT s FROM Session s JOIN FETCH s.user WHERE s.tokenHash = :tokenHash")
+  Optional<Session> findByTokenHash(@Param("tokenHash") String tokenHash);
 
-    void deleteByTokenHash(String tokenHash);
+  void deleteByTokenHash(String tokenHash);
 }
