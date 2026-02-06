@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/series")
 public class SeriesController {
 
-  @Autowired
-  private SeriesService seriesService;
+  @Autowired private SeriesService seriesService;
 
   @GetMapping("/recommendations")
   public ResponseEntity<RecommendationResponse> getRecommendations(@RequestParam String email) {
@@ -33,7 +32,8 @@ public class SeriesController {
   }
 
   @GetMapping("/{id}/episodes")
-  public ResponseEntity<java.util.List<com.example.app.model.Episode>> getEpisodes(@PathVariable UUID id) {
+  public ResponseEntity<java.util.List<com.example.app.model.Episode>> getEpisodes(
+      @PathVariable UUID id) {
     return ResponseEntity.ok(seriesService.getEpisodesForSeries(id));
   }
 }

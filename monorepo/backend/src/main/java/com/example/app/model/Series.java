@@ -22,8 +22,7 @@ public class Series {
 
   private String thumbnailUrl;
 
-  public Series() {
-  }
+  public Series() {}
 
   public Series(String title, String description, String category, String thumbnailUrl) {
     this.title = title;

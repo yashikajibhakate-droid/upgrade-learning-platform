@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class RateLimitingService {
 
-  private final Cache<String, Bucket> buckets = Caffeine.newBuilder().maximumSize(1000)
-      .expireAfterAccess(1, TimeUnit.HOURS).build();
+  private final Cache<String, Bucket> buckets =
+      Caffeine.newBuilder().maximumSize(1000).expireAfterAccess(1, TimeUnit.HOURS).build();
 
   public ConsumptionProbe resolveBucket(String key) {
     // In a distributed environment (multiple instances), you should use a

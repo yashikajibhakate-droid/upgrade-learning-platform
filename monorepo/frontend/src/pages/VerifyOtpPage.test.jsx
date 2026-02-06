@@ -26,7 +26,7 @@ describe('VerifyOtpPage', () => {
         window.alert = vi.fn();
     });
 
-    it('redirects to onboarding if users has no interests', async () => {
+    it('redirects to onboarding if user has no interests', async () => {
         const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
         api.post.mockResolvedValueOnce({
             status: 200,

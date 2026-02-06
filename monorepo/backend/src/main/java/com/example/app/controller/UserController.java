@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users")
 public class UserController {
 
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserController.class);
+  private static final org.slf4j.Logger logger =
+      org.slf4j.LoggerFactory.getLogger(UserController.class);
 
-  @Autowired
-  private UserService userService;
+  @Autowired private UserService userService;
 
   @GetMapping("/interests")
   public ResponseEntity<List<String>> getInterests() {
@@ -35,7 +35,11 @@ public class UserController {
     if (interestsObj instanceof List<?>) {
       for (Object item : (List<?>) interestsObj) {
         if (item instanceof String) {
-          interestsList.add((String) item);
+          String trimmed = ((String) item).trim();
+          if (trimmed.isEmpty()) {
+            return ResponseEntity.badRequest().body("Interests must be non-blank strings");
+          }
+          interestsList.add(trimmed);
         } else {
           return ResponseEntity.badRequest().body("Interests must be a list of strings");
         }

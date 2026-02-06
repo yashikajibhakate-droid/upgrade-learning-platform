@@ -80,14 +80,17 @@ const VerifyOtpPage = () => {
         try {
             const response = await api.post('/api/auth/verify-otp', { email, otp: otpCode });
             if (response.status === 200) {
-                alert('Login Successful!');
-                localStorage.setItem('authToken', response.data.token);
-                localStorage.setItem('userEmail', email);
+                if (response.data && response.data.token) {
+                    localStorage.setItem('authToken', response.data.token);
+                    localStorage.setItem('userEmail', email);
 
-                if (response.data.hasInterests) {
-                    navigate('/recommendations', { state: { email } });
+                    if (response.data.hasInterests) {
+                        navigate('/recommendations', { state: { email } });
+                    } else {
+                        navigate('/onboarding', { state: { email } });
+                    }
                 } else {
-                    navigate('/onboarding', { state: { email } });
+                    setError('Login failed: Invalid server response (missing token).');
                 }
             }
         } catch (err) {

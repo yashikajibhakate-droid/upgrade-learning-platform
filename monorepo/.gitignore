@@ -26,3 +26,7 @@ bin/
 .project
 .settings/
 target/
+
+# Logs
+*.log
+backend_run.log

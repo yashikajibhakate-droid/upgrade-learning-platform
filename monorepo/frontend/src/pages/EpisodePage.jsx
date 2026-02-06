@@ -1,17 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import api, { watchProgressApi } from '../services/api';
 import VideoPlayer from '../components/VideoPlayer';
 import { ArrowLeft, PlayCircle, Loader } from 'lucide-react';
 
 const EpisodePage = () => {
     const { seriesId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [series, setSeries] = useState(null);
     const [episodes, setEpisodes] = useState([]);
     const [currentEpisode, setCurrentEpisode] = useState(null);
+    const [initialTime, setInitialTime] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const email = localStorage.getItem('userEmail');
+    const progressSaveTimerRef = useRef(null);
+    const lastProgressRef = useRef(0); // Track current progress for cleanup
 
     useEffect(() => {
         const fetchData = async () => {
@@ -25,8 +30,53 @@ const EpisodePage = () => {
                 const episodesRes = await api.get(`/api/series/${seriesId}/episodes`);
                 setEpisodes(episodesRes.data);
 
-                if (episodesRes.data.length > 0) {
-                    setCurrentEpisode(episodesRes.data[0]);
+                // Check if specific episode ID is in URL params
+                const episodeIdFromUrl = searchParams.get('episodeId');
+                let episodeToLoad = null;
+
+                if (episodeIdFromUrl) {
+                    episodeToLoad = episodesRes.data.find(ep => ep.id === episodeIdFromUrl);
+                }
+
+                if (!episodeToLoad && episodesRes.data.length > 0) {
+                    episodeToLoad = episodesRes.data[0];
+                }
+
+                if (episodeToLoad) {
+                    let finalEpisode = episodeToLoad;
+
+                    // Check if this episode is already completed
+                    if (email) {
+                        try {
+                            const completionRes = await watchProgressApi.isCompleted(email, episodeToLoad.id);
+
+                            if (completionRes.data.isCompleted) {
+                                // Episode is completed, load next episode instead
+                                const currentIndex = episodesRes.data.findIndex(ep => ep.id === episodeToLoad.id);
+                                if (currentIndex >= 0 && currentIndex < episodesRes.data.length - 1) {
+                                    finalEpisode = episodesRes.data[currentIndex + 1];
+                                }
+                                setInitialTime(0); // Start next episode from beginning
+                            } else {
+                                // Episode not completed, check for saved progress
+                                try {
+                                    const progressRes = await watchProgressApi.getContinueWatching(email);
+                                    if (progressRes.data.episodeId === episodeToLoad.id) {
+                                        setInitialTime(progressRes.data.progressSeconds || 0);
+                                    } else {
+                                        setInitialTime(0);
+                                    }
+                                } catch {
+                                    setInitialTime(0);
+                                }
+                            }
+                        } catch (err) {
+                            // If check fails, just load the episode normally
+                            setInitialTime(0);
+                        }
+                    }
+
+                    setCurrentEpisode(finalEpisode);
                 }
             } catch (err) {
                 console.error("Failed to load series/episodes", err);
@@ -37,10 +87,63 @@ const EpisodePage = () => {
         };
 
         fetchData();
-    }, [seriesId]);
+    }, [seriesId, searchParams, email]);
+
+    // Save progress immediately when leaving the page
+    useEffect(() => {
+        return () => {
+            if (progressSaveTimerRef.current) {
+                clearTimeout(progressSaveTimerRef.current);
+            }
+
+            // Save final progress when unmounting
+            if (email && currentEpisode && lastProgressRef.current > 0) {
+                watchProgressApi.saveProgress(email, currentEpisode.id, Math.floor(lastProgressRef.current))
+                    .catch(err => console.error('Failed to save final progress:', err));
+            }
+        };
+    }, [email, currentEpisode]);
+
+    const handleProgressUpdate = (currentTime) => {
+        if (!email || !currentEpisode) return;
+
+        // Store current progress for cleanup
+        lastProgressRef.current = currentTime;
+
+        // Debounce the save - only save every 3 seconds
+        if (progressSaveTimerRef.current) {
+            clearTimeout(progressSaveTimerRef.current);
+        }
+
+        progressSaveTimerRef.current = setTimeout(() => {
+            watchProgressApi.saveProgress(email, currentEpisode.id, Math.floor(currentTime))
+                .catch(err => console.error('Failed to save progress:', err));
+        }, 3000); // Reduced from 5s to 3s for faster updates
+    };
+
+    const handleEpisodeEnded = async () => {
+        if (!email || !currentEpisode) return;
+
+        try {
+            // Mark current episode as completed
+            await watchProgressApi.markComplete(email, currentEpisode.id);
+
+            // Find and auto-play next episode
+            const currentIndex = episodes.findIndex(ep => ep.id === currentEpisode.id);
+            if (currentIndex >= 0 && currentIndex < episodes.length - 1) {
+                const nextEpisode = episodes[currentIndex + 1];
+                setCurrentEpisode(nextEpisode);
+                setInitialTime(0); // Start from beginning
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch (err) {
+            console.error('Failed to mark episode complete or load next:', err);
+        }
+    };
 
     const handleEpisodeSelect = (episode) => {
         setCurrentEpisode(episode);
+        setInitialTime(0); // Reset to start when manually selecting
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -91,7 +194,9 @@ const EpisodePage = () => {
                                 src={currentEpisode.videoUrl}
                                 poster={series.thumbnailUrl}
                                 title={currentEpisode.title}
-                                onEnded={() => console.log('Episode ended')}
+                                initialTime={initialTime}
+                                onProgressUpdate={handleProgressUpdate}
+                                onEnded={handleEpisodeEnded}
                             />
                             <div className="bg-gray-800 p-6 rounded-2xl">
                                 <h2 className="text-2xl font-bold mb-2">{currentEpisode.title}</h2>
@@ -116,8 +221,8 @@ const EpisodePage = () => {
                                 key={ep.id}
                                 onClick={() => handleEpisodeSelect(ep)}
                                 className={`w-full text-left p-4 rounded-xl flex items-start gap-3 transition-all ${currentEpisode?.id === ep.id
-                                        ? 'bg-indigo-600 text-white shadow-lg'
-                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                    ? 'bg-indigo-600 text-white shadow-lg'
+                                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                                     }`}
                             >
                                 <div className="mt-1">
