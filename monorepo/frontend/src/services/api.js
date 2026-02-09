@@ -44,4 +44,12 @@ export const watchProgressApi = {
         api.get(`/api/watch-progress/is-completed?email=${email}&episodeId=${episodeId}`),
 };
 
+// Feedback API Methods
+export const feedbackApi = {
+    saveFeedback: (email, episodeId, isHelpful) =>
+        api.post('/api/feedback/save', { email, episodeId, isHelpful }),
+    checkExists: (email, episodeId) =>
+        api.get(`/api/feedback/exists?email=${email}&episodeId=${episodeId}`),
+};
+
 export default api;

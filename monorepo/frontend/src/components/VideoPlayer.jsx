@@ -41,6 +41,8 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title, initialTime = 0, on
             setCurrentTime(0);
             setIsPlaying(false);
             setError(null);
+            // Reset completion flag for new video
+            videoRef.current.hasTriggeredCompletion = false;
         }
     }, [src]);
 
@@ -57,7 +59,21 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title, initialTime = 0, on
     const handleTimeUpdate = () => {
         if (videoRef.current) {
             const time = videoRef.current.currentTime;
+            const videoDuration = videoRef.current.duration;
             setCurrentTime(time);
+
+            // Trigger completion at 95% to handle timing issues
+            // This ensures onEnded is called even if the video doesn't naturally trigger it
+            if (videoDuration > 0 && time >= videoDuration * 0.95 && onEnded) {
+                // Only trigger once by checking if we're not already at the end
+                if (time < videoDuration) {
+                    // Mark as having triggered completion
+                    if (!videoRef.current.hasTriggeredCompletion) {
+                        videoRef.current.hasTriggeredCompletion = true;
+                        onEnded();
+                    }
+                }
+            }
 
             // Call onProgressUpdate if provided (debounced by parent component)
             if (onProgressUpdate && !videoRef.current.paused) {

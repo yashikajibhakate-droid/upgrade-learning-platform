@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import api, { watchProgressApi } from '../services/api';
+import api, { watchProgressApi, feedbackApi } from '../services/api';
 import VideoPlayer from '../components/VideoPlayer';
+import FeedbackModal from '../components/FeedbackModal';
 import { ArrowLeft, PlayCircle, Loader } from 'lucide-react';
 
 const EpisodePage = () => {
@@ -14,6 +15,8 @@ const EpisodePage = () => {
     const [initialTime, setInitialTime] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [completedEpisodeId, setCompletedEpisodeId] = useState(null);
     const email = localStorage.getItem('userEmail');
     const progressSaveTimerRef = useRef(null);
     const lastProgressRef = useRef(0); // Track current progress for cleanup
@@ -128,17 +131,68 @@ const EpisodePage = () => {
             // Mark current episode as completed
             await watchProgressApi.markComplete(email, currentEpisode.id);
 
-            // Find and auto-play next episode
-            const currentIndex = episodes.findIndex(ep => ep.id === currentEpisode.id);
-            if (currentIndex >= 0 && currentIndex < episodes.length - 1) {
-                const nextEpisode = episodes[currentIndex + 1];
-                setCurrentEpisode(nextEpisode);
-                setInitialTime(0); // Start from beginning
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Check if feedback modal was already shown for this episode (page refresh scenario)
+            const feedbackSessionKey = `feedback_shown_${currentEpisode.id}`;
+            const feedbackShown = sessionStorage.getItem(feedbackSessionKey);
+
+            if (feedbackShown) {
+                // Skip feedback if page was refreshed during feedback flow
+                sessionStorage.removeItem(feedbackSessionKey);
+                proceedToNextEpisode();
+            } else {
+                // Mark that we're showing feedback modal (cleared after submission)
+                sessionStorage.setItem(feedbackSessionKey, 'true');
+
+                // Show feedback modal
+                setCompletedEpisodeId(currentEpisode.id);
+                setShowFeedbackModal(true);
             }
         } catch (err) {
-            console.error('Failed to mark episode complete or load next:', err);
+            console.error('Failed to mark episode complete:', err);
+            // Even if marking complete fails, proceed to next episode
+            proceedToNextEpisode();
         }
+    };
+
+    const proceedToNextEpisode = () => {
+        // Find and auto-play next episode
+        const currentIndex = episodes.findIndex(ep => ep.id === currentEpisode.id);
+        if (currentIndex >= 0 && currentIndex < episodes.length - 1) {
+            const nextEpisode = episodes[currentIndex + 1];
+            setCurrentEpisode(nextEpisode);
+            setInitialTime(0); // Start from beginning
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    const handleFeedbackSubmit = async (isHelpful) => {
+        if (!email || !completedEpisodeId) return;
+
+        try {
+            // Submit feedback
+            await feedbackApi.saveFeedback(email, completedEpisodeId, isHelpful);
+
+            // Clear session storage key since feedback was submitted
+            const feedbackSessionKey = `feedback_shown_${completedEpisodeId}`;
+            sessionStorage.removeItem(feedbackSessionKey);
+        } catch (err) {
+            console.error('Failed to save feedback:', err);
+        }
+
+        // Close modal and proceed regardless of feedback submission result
+        setShowFeedbackModal(false);
+        proceedToNextEpisode();
+    };
+
+    const handleFeedbackClose = () => {
+        // User skipped feedback
+        if (completedEpisodeId) {
+            const feedbackSessionKey = `feedback_shown_${completedEpisodeId}`;
+            sessionStorage.removeItem(feedbackSessionKey);
+        }
+
+        setShowFeedbackModal(false);
+        proceedToNextEpisode();
     };
 
     const handleEpisodeSelect = (episode) => {
@@ -241,6 +295,14 @@ const EpisodePage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Feedback Modal */}
+            <FeedbackModal
+                isOpen={showFeedbackModal}
+                onClose={handleFeedbackClose}
+                onSubmit={handleFeedbackSubmit}
+                episodeTitle={currentEpisode?.title}
+            />
         </div>
     );
 };
