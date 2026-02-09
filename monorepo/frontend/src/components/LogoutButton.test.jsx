@@ -15,7 +15,7 @@ describe('LogoutButton', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         // Mock localStorage
-        Storage.prototype.removeItem = vi.fn();
+        vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { });
     });
 
     afterEach(() => {

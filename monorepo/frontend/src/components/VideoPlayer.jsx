@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipBack, SkipForward } from 'lucide-react';
 
-const VideoPlayer = ({ src, poster, onEnded, onError, title }) => {
+const VideoPlayer = ({ src, poster, onEnded, onError, title, initialTime = 0, onProgressUpdate }) => {
     const videoRef = useRef(null);
     const containerRef = useRef(null);
+    const progressUpdateTimerRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -34,20 +35,34 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title }) => {
         };
     }, []);
 
+    // Reset state when video source changes (for auto-next-episode)
+    useEffect(() => {
+        if (videoRef.current) {
+            setCurrentTime(0);
+            setIsPlaying(false);
+            setError(null);
+        }
+    }, [src]);
+
     const togglePlay = () => {
         if (videoRef.current) {
-            if (isPlaying) {
-                videoRef.current.pause();
+            if (videoRef.current.paused) {
+                videoRef.current.play().catch(e => console.error("Error playing video:", e));
             } else {
-                videoRef.current.play();
+                videoRef.current.pause();
             }
-            setIsPlaying(!isPlaying);
         }
     };
 
     const handleTimeUpdate = () => {
         if (videoRef.current) {
-            setCurrentTime(videoRef.current.currentTime);
+            const time = videoRef.current.currentTime;
+            setCurrentTime(time);
+
+            // Call onProgressUpdate if provided (debounced by parent component)
+            if (onProgressUpdate && !videoRef.current.paused) {
+                onProgressUpdate(time);
+            }
         }
     };
 
@@ -55,6 +70,12 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title }) => {
         if (videoRef.current) {
             setDuration(videoRef.current.duration);
             setError(null);
+
+            // Seek to initial time if provided (for resume functionality)
+            if (initialTime > 0 && initialTime < videoRef.current.duration) {
+                videoRef.current.currentTime = initialTime;
+                setCurrentTime(initialTime);
+            }
         }
     };
 
@@ -88,13 +109,30 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title }) => {
         }
     };
 
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+
+        const container = containerRef.current;
+        if (container) {
+            container.addEventListener('fullscreenchange', handleFullscreenChange);
+        }
+
+        return () => {
+            if (container) {
+                container.removeEventListener('fullscreenchange', handleFullscreenChange);
+            }
+        };
+    }, []);
+
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
-            containerRef.current.requestFullscreen();
-            setIsFullscreen(true);
+            containerRef.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
         } else {
             document.exitFullscreen();
-            setIsFullscreen(false);
         }
     };
 
@@ -130,6 +168,8 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title }) => {
                     className="w-full h-full object-contain"
                     onTimeUpdate={handleTimeUpdate}
                     onLoadedMetadata={handleLoadedMetadata}
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
                     onEnded={onEnded}
                     onError={handleError}
                     onClick={togglePlay}
@@ -194,7 +234,9 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title }) => {
             {/* Center Play Button (Initial or Paused) */}
             {!isPlaying && !error && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-black/50 p-4 rounded-full backdrop-blur-sm border border-white/20">
+                    <div
+                        onClick={togglePlay}
+                        className="bg-black/50 p-4 rounded-full backdrop-blur-sm border border-white/20 cursor-pointer hover:bg-black/70 transition-colors pointer-events-auto">
                         <Play size={48} fill="white" className="text-white translate-x-1" />
                     </div>
                 </div>

@@ -21,17 +21,13 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(AuthController.class)
 class AuthControllerTest {
 
-  @Autowired
-  private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-  @MockBean
-  private AuthService authService;
+  @MockBean private AuthService authService;
 
-  @MockBean
-  private com.example.app.service.RateLimitingService rateLimitingService;
+  @MockBean private com.example.app.service.RateLimitingService rateLimitingService;
 
-  @MockBean
-  private com.example.app.config.AuthInterceptor authInterceptor;
+  @MockBean private com.example.app.config.AuthInterceptor authInterceptor;
 
   @org.junit.jupiter.api.BeforeEach
   void setUp() throws Exception {
@@ -66,7 +62,8 @@ class AuthControllerTest {
 
   @Test
   void testVerifyOtp_Success_ReturnsOk() throws Exception {
-    when(authService.verifyOtpAndLogin(anyString(), anyString())).thenReturn(Optional.of(new User("test@example.com")));
+    when(authService.verifyOtpAndLogin(anyString(), anyString()))
+        .thenReturn(Optional.of(new User("test@example.com")));
     when(authService.createSession(any())).thenReturn("mock-token");
     String jsonBody = "{\"email\": \"test@example.com\", \"otp\": \"123456\"}";
 

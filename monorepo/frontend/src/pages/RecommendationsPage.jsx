@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, Play, Info } from 'lucide-react';
-import api from '../services/api';
+import api, { watchProgressApi } from '../services/api';
 import LogoutButton from '../components/LogoutButton';
+import ContinueWatchingSection from '../components/ContinueWatchingSection';
 
 const RecommendationsPage = () => {
     const location = useLocation();
@@ -11,6 +12,7 @@ const RecommendationsPage = () => {
 
     const [recommendations, setRecommendations] = useState([]);
     const [others, setOthers] = useState([]);
+    const [continueWatching, setContinueWatching] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -22,9 +24,21 @@ const RecommendationsPage = () => {
 
         const fetchData = async () => {
             try {
+                setLoading(true);
                 const response = await api.get(`/api/series/recommendations?email=${email}`);
                 setRecommendations(response.data.recommended);
                 setOthers(response.data.others);
+
+                // Fetch continue watching data
+                try {
+                    const continueResponse = await watchProgressApi.getContinueWatching(email);
+                    setContinueWatching(continueResponse.data);
+                } catch (err) {
+                    // If 404, user has no incomplete episodes - this is expected
+                    if (err.response?.status !== 404) {
+                        console.error('Failed to load continue watching:', err);
+                    }
+                }
             } catch (err) {
                 console.error(err);
                 setError('Failed to load recommendations.');
@@ -34,7 +48,7 @@ const RecommendationsPage = () => {
         };
 
         fetchData();
-    }, [email, navigate]);
+    }, [email, navigate, location.key]); // Refetch when returning to page
 
     if (loading) {
         return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -56,6 +70,9 @@ const RecommendationsPage = () => {
 
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {error && <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">{error}</div>}
+
+                {/* Continue Watching Section */}
+                <ContinueWatchingSection data={continueWatching} />
 
                 {/* Recommended Section */}
                 <section className="mb-12">

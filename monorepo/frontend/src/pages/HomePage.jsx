@@ -11,9 +11,7 @@ const HomePage = () => {
         return <Navigate to="/recommendations" state={{ email }} replace />;
     }
 
-    if (location.state?.email) {
-        return <Navigate to="/recommendations" state={{ email: location.state.email }} replace />;
-    }
+
 
     return <LandingPage />;
 };
