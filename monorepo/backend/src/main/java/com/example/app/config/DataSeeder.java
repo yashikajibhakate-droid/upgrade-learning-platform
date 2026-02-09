@@ -12,11 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class DataSeeder implements CommandLineRunner {
 
-  @Autowired
-  private SeriesRepository seriesRepository;
+  @Autowired private SeriesRepository seriesRepository;
 
-  @Autowired
-  private EpisodeRepository episodeRepository;
+  @Autowired private EpisodeRepository episodeRepository;
 
   @Override
   @Transactional
@@ -77,10 +75,11 @@ public class DataSeeder implements CommandLineRunner {
   private void createOrUpdateSeries(
       String title, String description, String category, String imageUrl) {
 
-    Series series = seriesRepository.findAll().stream()
-        .filter(s -> s.getTitle().equals(title))
-        .findFirst()
-        .orElse(null);
+    Series series =
+        seriesRepository.findAll().stream()
+            .filter(s -> s.getTitle().equals(title))
+            .findFirst()
+            .orElse(null);
 
     if (series == null) {
       series = new Series(title, description, category, imageUrl);
@@ -94,7 +93,8 @@ public class DataSeeder implements CommandLineRunner {
   }
 
   private void ensureEpisodes(Series series) {
-    java.util.List<Episode> existingEpisodes = episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
+    java.util.List<Episode> existingEpisodes =
+        episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
 
     // BigBuckBunny.mp4 is 596 seconds (9:56)
     createOrUpdateEpisode(
@@ -129,14 +129,15 @@ public class DataSeeder implements CommandLineRunner {
       String title,
       String videoUrl,
       int duration) {
-    Episode episode = existingEpisodes.stream()
-        .filter(
-            e -> {
-              Integer seq = e.getSequenceNumber();
-              return seq != null && seq == sequenceNumber;
-            })
-        .findFirst()
-        .orElse(null);
+    Episode episode =
+        existingEpisodes.stream()
+            .filter(
+                e -> {
+                  Integer seq = e.getSequenceNumber();
+                  return seq != null && seq == sequenceNumber;
+                })
+            .findFirst()
+            .orElse(null);
 
     if (episode == null) {
       episode = new Episode(series, title, videoUrl, duration, sequenceNumber);
