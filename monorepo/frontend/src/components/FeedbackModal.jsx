@@ -10,19 +10,18 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit, episodeTitle }) => {
         setIsSubmitting(true);
         try {
             await onSubmit(isHelpful);
-            onClose();
         } catch (error) {
             console.error('Failed to submit feedback:', error);
-            // Still close the modal even if submission fails
-            onClose();
         } finally {
             setIsSubmitting(false);
+            // Always let parent's onClose handle modal closing and navigation
+            onClose();
         }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-            <div className="bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-gray-700">
+            <div className="relative bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-gray-700">
                 {/* Close Button */}
                 <button
                     onClick={onClose}

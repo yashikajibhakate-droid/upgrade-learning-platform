@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FeedbackRepository extends JpaRepository<Feedback, UUID> {
 
-    Optional<Feedback> findByUserEmailAndEpisodeId(String userEmail, UUID episodeId);
+  Optional<Feedback> findByUserEmailAndEpisodeId(String userEmail, UUID episodeId);
 }

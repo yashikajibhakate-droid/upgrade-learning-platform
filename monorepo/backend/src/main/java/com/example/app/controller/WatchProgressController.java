@@ -12,88 +12,88 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/watch-progress")
 public class WatchProgressController {
 
-    private final WatchProgressService watchProgressService;
+  private final WatchProgressService watchProgressService;
 
-    public WatchProgressController(WatchProgressService watchProgressService) {
-        this.watchProgressService = watchProgressService;
+  public WatchProgressController(WatchProgressService watchProgressService) {
+    this.watchProgressService = watchProgressService;
+  }
+
+  @GetMapping("/continue")
+  public ResponseEntity<ContinueWatchingResponse> getContinueWatching(@RequestParam String email) {
+    Optional<ContinueWatchingResponse> response = watchProgressService.getContinueWatching(email);
+    return response.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+  }
+
+  @PostMapping("/save")
+  public ResponseEntity<Map<String, String>> saveProgress(
+      @RequestBody SaveProgressRequest request) {
+    watchProgressService.saveProgress(
+        request.getEmail(), request.getEpisodeId(), request.getProgressSeconds());
+    return ResponseEntity.ok(Map.of("message", "Progress saved successfully"));
+  }
+
+  @PostMapping("/complete")
+  public ResponseEntity<Map<String, String>> markCompleted(
+      @RequestBody CompleteEpisodeRequest request) {
+    watchProgressService.markCompleted(request.getEmail(), request.getEpisodeId());
+    return ResponseEntity.ok(Map.of("message", "Episode marked as completed"));
+  }
+
+  @GetMapping("/is-completed")
+  public ResponseEntity<Map<String, Boolean>> isEpisodeCompleted(
+      @RequestParam String email, @RequestParam UUID episodeId) {
+    boolean isCompleted = watchProgressService.isEpisodeCompleted(email, episodeId);
+    return ResponseEntity.ok(Map.of("isCompleted", isCompleted));
+  }
+
+  static class SaveProgressRequest {
+    private String email;
+    private UUID episodeId;
+    private Integer progressSeconds;
+
+    public String getEmail() {
+      return email;
     }
 
-    @GetMapping("/continue")
-    public ResponseEntity<ContinueWatchingResponse> getContinueWatching(
-            @RequestParam String email) {
-        Optional<ContinueWatchingResponse> response = watchProgressService.getContinueWatching(email);
-        return response.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public void setEmail(String email) {
+      this.email = email;
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<Map<String, String>> saveProgress(@RequestBody SaveProgressRequest request) {
-        watchProgressService.saveProgress(
-                request.getEmail(), request.getEpisodeId(), request.getProgressSeconds());
-        return ResponseEntity.ok(Map.of("message", "Progress saved successfully"));
+    public UUID getEpisodeId() {
+      return episodeId;
     }
 
-    @PostMapping("/complete")
-    public ResponseEntity<Map<String, String>> markCompleted(
-            @RequestBody CompleteEpisodeRequest request) {
-        watchProgressService.markCompleted(request.getEmail(), request.getEpisodeId());
-        return ResponseEntity.ok(Map.of("message", "Episode marked as completed"));
+    public void setEpisodeId(UUID episodeId) {
+      this.episodeId = episodeId;
     }
 
-    @GetMapping("/is-completed")
-    public ResponseEntity<Map<String, Boolean>> isEpisodeCompleted(
-            @RequestParam String email, @RequestParam UUID episodeId) {
-        boolean isCompleted = watchProgressService.isEpisodeCompleted(email, episodeId);
-        return ResponseEntity.ok(Map.of("isCompleted", isCompleted));
+    public Integer getProgressSeconds() {
+      return progressSeconds;
     }
 
-    static class SaveProgressRequest {
-        private String email;
-        private UUID episodeId;
-        private Integer progressSeconds;
+    public void setProgressSeconds(Integer progressSeconds) {
+      this.progressSeconds = progressSeconds;
+    }
+  }
 
-        public String getEmail() {
-            return email;
-        }
+  static class CompleteEpisodeRequest {
+    private String email;
+    private UUID episodeId;
 
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public UUID getEpisodeId() {
-            return episodeId;
-        }
-
-        public void setEpisodeId(UUID episodeId) {
-            this.episodeId = episodeId;
-        }
-
-        public Integer getProgressSeconds() {
-            return progressSeconds;
-        }
-
-        public void setProgressSeconds(Integer progressSeconds) {
-            this.progressSeconds = progressSeconds;
-        }
+    public String getEmail() {
+      return email;
     }
 
-    static class CompleteEpisodeRequest {
-        private String email;
-        private UUID episodeId;
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public UUID getEpisodeId() {
-            return episodeId;
-        }
-
-        public void setEpisodeId(UUID episodeId) {
-            this.episodeId = episodeId;
-        }
+    public void setEmail(String email) {
+      this.email = email;
     }
+
+    public UUID getEpisodeId() {
+      return episodeId;
+    }
+
+    public void setEpisodeId(UUID episodeId) {
+      this.episodeId = episodeId;
+    }
+  }
 }

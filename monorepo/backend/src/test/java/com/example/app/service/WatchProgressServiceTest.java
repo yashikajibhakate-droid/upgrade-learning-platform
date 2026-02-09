@@ -23,121 +23,117 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class WatchProgressServiceTest {
 
-    @Mock
-    private WatchHistoryRepository watchHistoryRepository;
-    @Mock
-    private EpisodeRepository episodeRepository;
-    @Mock
-    private SeriesRepository seriesRepository;
+  @Mock private WatchHistoryRepository watchHistoryRepository;
+  @Mock private EpisodeRepository episodeRepository;
+  @Mock private SeriesRepository seriesRepository;
 
-    @InjectMocks
-    private WatchProgressService watchProgressService;
+  @InjectMocks private WatchProgressService watchProgressService;
 
-    @Test
-    void testGetContinueWatching_WithIncompleteEpisode_ReturnsData() {
-        String email = "test@example.com";
-        UUID seriesId = UUID.randomUUID();
-        UUID episodeId = UUID.randomUUID();
+  @Test
+  void testGetContinueWatching_WithIncompleteEpisode_ReturnsData() {
+    String email = "test@example.com";
+    UUID seriesId = UUID.randomUUID();
+    UUID episodeId = UUID.randomUUID();
 
-        Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
-        Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
+    Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
+    Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
 
-        WatchHistory watchHistory = new WatchHistory(email, seriesId, episodeId, 120, false);
-        watchHistory.setLastWatchedAt(LocalDateTime.now());
+    WatchHistory watchHistory = new WatchHistory(email, seriesId, episodeId, 120, false);
+    watchHistory.setLastWatchedAt(LocalDateTime.now());
 
-        when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
-                email))
-                .thenReturn(Optional.of(watchHistory));
-        when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
+    when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
+            email))
+        .thenReturn(Optional.of(watchHistory));
+    when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
-        Optional<ContinueWatchingResponse> result = watchProgressService.getContinueWatching(email);
+    Optional<ContinueWatchingResponse> result = watchProgressService.getContinueWatching(email);
 
-        assertTrue(result.isPresent());
-        assertEquals("Test Series", result.get().getSeriesTitle());
-        assertEquals("Episode 1", result.get().getEpisodeTitle());
-        assertEquals(120, result.get().getProgressSeconds());
-    }
+    assertTrue(result.isPresent());
+    assertEquals("Test Series", result.get().getSeriesTitle());
+    assertEquals("Episode 1", result.get().getEpisodeTitle());
+    assertEquals(120, result.get().getProgressSeconds());
+  }
 
-    @Test
-    void testGetContinueWatching_NoIncompleteEpisode_ReturnsEmpty() {
-        String email = "test@example.com";
+  @Test
+  void testGetContinueWatching_NoIncompleteEpisode_ReturnsEmpty() {
+    String email = "test@example.com";
 
-        when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
-                email))
-                .thenReturn(Optional.empty());
+    when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
+            email))
+        .thenReturn(Optional.empty());
 
-        Optional<ContinueWatchingResponse> result = watchProgressService.getContinueWatching(email);
+    Optional<ContinueWatchingResponse> result = watchProgressService.getContinueWatching(email);
 
-        assertFalse(result.isPresent());
-    }
+    assertFalse(result.isPresent());
+  }
 
-    @Test
-    void testSaveProgress_NewProgress_CreatesRecord() {
-        String email = "test@example.com";
-        UUID episodeId = UUID.randomUUID();
-        Integer progressSeconds = 120;
+  @Test
+  void testSaveProgress_NewProgress_CreatesRecord() {
+    String email = "test@example.com";
+    UUID episodeId = UUID.randomUUID();
+    Integer progressSeconds = 120;
 
-        Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
-        Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
+    Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
+    Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
 
-        when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
-                .thenReturn(Optional.empty());
-        when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
+    when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
+        .thenReturn(Optional.empty());
+    when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
-        watchProgressService.saveProgress(email, episodeId, progressSeconds);
+    watchProgressService.saveProgress(email, episodeId, progressSeconds);
 
-        verify(watchHistoryRepository, times(1)).save(any(WatchHistory.class));
-    }
+    verify(watchHistoryRepository, times(1)).save(any(WatchHistory.class));
+  }
 
-    @Test
-    void testSaveProgress_ExistingProgress_UpdatesRecord() {
-        String email = "test@example.com";
-        UUID episodeId = UUID.randomUUID();
-        UUID seriesId = UUID.randomUUID();
-        Integer progressSeconds = 240;
+  @Test
+  void testSaveProgress_ExistingProgress_UpdatesRecord() {
+    String email = "test@example.com";
+    UUID episodeId = UUID.randomUUID();
+    UUID seriesId = UUID.randomUUID();
+    Integer progressSeconds = 240;
 
-        WatchHistory existingHistory = new WatchHistory(email, seriesId, episodeId, 120, false);
+    WatchHistory existingHistory = new WatchHistory(email, seriesId, episodeId, 120, false);
 
-        when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
-                .thenReturn(Optional.of(existingHistory));
+    when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
+        .thenReturn(Optional.of(existingHistory));
 
-        watchProgressService.saveProgress(email, episodeId, progressSeconds);
+    watchProgressService.saveProgress(email, episodeId, progressSeconds);
 
-        assertEquals(240, existingHistory.getProgressSeconds());
-        verify(watchHistoryRepository, times(1)).save(existingHistory);
-    }
+    assertEquals(240, existingHistory.getProgressSeconds());
+    verify(watchHistoryRepository, times(1)).save(existingHistory);
+  }
 
-    @Test
-    void testMarkCompleted_ExistingProgress_MarksAsComplete() {
-        String email = "test@example.com";
-        UUID episodeId = UUID.randomUUID();
-        UUID seriesId = UUID.randomUUID();
+  @Test
+  void testMarkCompleted_ExistingProgress_MarksAsComplete() {
+    String email = "test@example.com";
+    UUID episodeId = UUID.randomUUID();
+    UUID seriesId = UUID.randomUUID();
 
-        WatchHistory existingHistory = new WatchHistory(email, seriesId, episodeId, 580, false);
+    WatchHistory existingHistory = new WatchHistory(email, seriesId, episodeId, 580, false);
 
-        when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
-                .thenReturn(Optional.of(existingHistory));
+    when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
+        .thenReturn(Optional.of(existingHistory));
 
-        watchProgressService.markCompleted(email, episodeId);
+    watchProgressService.markCompleted(email, episodeId);
 
-        assertTrue(existingHistory.isCompleted());
-        verify(watchHistoryRepository, times(1)).save(existingHistory);
-    }
+    assertTrue(existingHistory.isCompleted());
+    verify(watchHistoryRepository, times(1)).save(existingHistory);
+  }
 
-    @Test
-    void testMarkCompleted_NoExistingProgress_CreatesCompletedRecord() {
-        String email = "test@example.com";
-        UUID episodeId = UUID.randomUUID();
+  @Test
+  void testMarkCompleted_NoExistingProgress_CreatesCompletedRecord() {
+    String email = "test@example.com";
+    UUID episodeId = UUID.randomUUID();
 
-        Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
-        Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
+    Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
+    Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
 
-        when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
-                .thenReturn(Optional.empty());
-        when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
+    when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
+        .thenReturn(Optional.empty());
+    when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
-        watchProgressService.markCompleted(email, episodeId);
+    watchProgressService.markCompleted(email, episodeId);
 
-        verify(watchHistoryRepository, times(1)).save(any(WatchHistory.class));
-    }
+    verify(watchHistoryRepository, times(1)).save(any(WatchHistory.class));
+  }
 }

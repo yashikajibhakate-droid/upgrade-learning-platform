@@ -186,7 +186,12 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title, initialTime = 0, on
                     onLoadedMetadata={handleLoadedMetadata}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
-                    onEnded={onEnded}
+                    onEnded={() => {
+                        if (videoRef.current && !videoRef.current.hasTriggeredCompletion && onEnded) {
+                            videoRef.current.hasTriggeredCompletion = true;
+                            onEnded();
+                        }
+                    }}
                     onError={handleError}
                     onClick={togglePlay}
                 />

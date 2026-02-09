@@ -18,107 +18,171 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(FeedbackController.class)
 class FeedbackControllerTest {
 
-        @Autowired
-        private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-        @MockBean
-        private FeedbackService feedbackService;
+  @MockBean private FeedbackService feedbackService;
 
-        // Mocking dependencies required by WebConfig/AuthInterceptor
-        @MockBean
-        private com.example.app.service.UserService userService;
+  // Mocking dependencies required by WebConfig/AuthInterceptor
+  @MockBean private com.example.app.service.UserService userService;
 
-        @MockBean
-        private com.example.app.config.AuthInterceptor authInterceptor;
+  @MockBean private com.example.app.config.AuthInterceptor authInterceptor;
 
-        @Autowired
-        private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
-        private String testEmail;
-        private UUID testEpisodeId;
+  private com.example.app.model.User testUser;
+  private UUID testEpisodeId;
 
-        @BeforeEach
-        void setUp() throws Exception {
-                when(authInterceptor.preHandle(any(), any(), any())).thenReturn(true);
-                testEmail = "test@example.com";
-                testEpisodeId = UUID.randomUUID();
-        }
+  @BeforeEach
+  void setUp() throws Exception {
+    testUser = new com.example.app.model.User("test@example.com");
+    testEpisodeId = UUID.randomUUID();
 
-        @Test
-        void saveFeedback_ValidRequest_ShouldReturnOk() throws Exception {
-                // Arrange
-                FeedbackController.SaveFeedbackRequest request = new FeedbackController.SaveFeedbackRequest();
-                request.setEmail(testEmail);
-                request.setEpisodeId(testEpisodeId);
-                request.setIsHelpful(true);
+    // Mock AuthInterceptor to set user in request
+    when(authInterceptor.preHandle(any(), any(), any()))
+        .thenAnswer(
+            invocation -> {
+              jakarta.servlet.http.HttpServletRequest request = invocation.getArgument(0);
+              request.setAttribute("user", testUser);
+              return true;
+            });
+  }
 
-                doNothing().when(feedbackService).saveFeedback(testEmail, testEpisodeId, true);
+  @Test
+  void saveFeedback_ValidRequest_ShouldReturnOk() throws Exception {
+    // Arrange
+    FeedbackController.SaveFeedbackRequest request = new FeedbackController.SaveFeedbackRequest();
+    request.setEpisodeId(testEpisodeId);
+    request.setIsHelpful(true);
 
-                // Act & Assert
-                mockMvc
-                                .perform(
-                                                post("/api/feedback/save")
-                                                                .contentType(MediaType.APPLICATION_JSON)
-                                                                .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.message").value("Feedback saved successfully"));
+    doNothing().when(feedbackService).saveFeedback("test@example.com", testEpisodeId, true);
 
-                verify(feedbackService, times(1)).saveFeedback(testEmail, testEpisodeId, true);
-        }
+    // Act & Assert
+    mockMvc
+        .perform(
+            post("/api/feedback/save")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Feedback saved successfully"));
 
-        @Test
-        void saveFeedback_NotHelpfulFeedback_ShouldReturnOk() throws Exception {
-                // Arrange
-                FeedbackController.SaveFeedbackRequest request = new FeedbackController.SaveFeedbackRequest();
-                request.setEmail(testEmail);
-                request.setEpisodeId(testEpisodeId);
-                request.setIsHelpful(false);
+    verify(feedbackService, times(1)).saveFeedback("test@example.com", testEpisodeId, true);
+  }
 
-                doNothing().when(feedbackService).saveFeedback(testEmail, testEpisodeId, false);
+  @Test
+  void saveFeedback_NotHelpfulFeedback_ShouldReturnOk() throws Exception {
+    // Arrange
+    FeedbackController.SaveFeedbackRequest request = new FeedbackController.SaveFeedbackRequest();
+    request.setEpisodeId(testEpisodeId);
+    request.setIsHelpful(false);
 
-                // Act & Assert
-                mockMvc
-                                .perform(
-                                                post("/api/feedback/save")
-                                                                .contentType(MediaType.APPLICATION_JSON)
-                                                                .content(objectMapper.writeValueAsString(request)))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.message").value("Feedback saved successfully"));
+    doNothing().when(feedbackService).saveFeedback("test@example.com", testEpisodeId, false);
 
-                verify(feedbackService, times(1)).saveFeedback(testEmail, testEpisodeId, false);
-        }
+    // Act & Assert
+    mockMvc
+        .perform(
+            post("/api/feedback/save")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Feedback saved successfully"));
 
-        @Test
-        void feedbackExists_FeedbackExists_ShouldReturnTrue() throws Exception {
-                // Arrange
-                when(feedbackService.feedbackExists(testEmail, testEpisodeId)).thenReturn(true);
+    verify(feedbackService, times(1)).saveFeedback("test@example.com", testEpisodeId, false);
+  }
 
-                // Act & Assert
-                mockMvc
-                                .perform(
-                                                get("/api/feedback/exists")
-                                                                .param("email", testEmail)
-                                                                .param("episodeId", testEpisodeId.toString()))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.exists").value(true));
+  @Test
+  void feedbackExists_FeedbackExists_ShouldReturnTrue() throws Exception {
+    // Arrange
+    FeedbackController.FeedbackExistsRequest request =
+        new FeedbackController.FeedbackExistsRequest();
+    request.setEpisodeId(testEpisodeId);
 
-                verify(feedbackService, times(1)).feedbackExists(testEmail, testEpisodeId);
-        }
+    when(feedbackService.feedbackExists("test@example.com", testEpisodeId)).thenReturn(true);
 
-        @Test
-        void feedbackExists_FeedbackDoesNotExist_ShouldReturnFalse() throws Exception {
-                // Arrange
-                when(feedbackService.feedbackExists(testEmail, testEpisodeId)).thenReturn(false);
+    // Act & Assert
+    mockMvc
+        .perform(
+            post("/api/feedback/exists")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.exists").value(true));
 
-                // Act & Assert
-                mockMvc
-                                .perform(
-                                                get("/api/feedback/exists")
-                                                                .param("email", testEmail)
-                                                                .param("episodeId", testEpisodeId.toString()))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.exists").value(false));
+    verify(feedbackService, times(1)).feedbackExists("test@example.com", testEpisodeId);
+  }
 
-                verify(feedbackService, times(1)).feedbackExists(testEmail, testEpisodeId);
-        }
+  @Test
+  void feedbackExists_FeedbackDoesNotExist_ShouldReturnFalse() throws Exception {
+    // Arrange
+    FeedbackController.FeedbackExistsRequest request =
+        new FeedbackController.FeedbackExistsRequest();
+    request.setEpisodeId(testEpisodeId);
+
+    when(feedbackService.feedbackExists("test@example.com", testEpisodeId)).thenReturn(false);
+
+    // Act & Assert
+    mockMvc
+        .perform(
+            post("/api/feedback/exists")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.exists").value(false));
+
+    verify(feedbackService, times(1)).feedbackExists("test@example.com", testEpisodeId);
+  }
+
+  @Test
+  void saveFeedback_NullEpisodeId_ShouldReturnBadRequest() throws Exception {
+    // Arrange - episodeId is null
+    FeedbackController.SaveFeedbackRequest request = new FeedbackController.SaveFeedbackRequest();
+    request.setEpisodeId(null);
+    request.setIsHelpful(true);
+
+    // Act & Assert
+    mockMvc
+        .perform(
+            post("/api/feedback/save")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
+
+    // Service should not be called
+    verify(feedbackService, never()).saveFeedback(anyString(), any(), any());
+  }
+
+  @Test
+  void saveFeedback_NullIsHelpful_ShouldReturnBadRequest() throws Exception {
+    // Arrange - isHelpful is null
+    FeedbackController.SaveFeedbackRequest request = new FeedbackController.SaveFeedbackRequest();
+    request.setEpisodeId(testEpisodeId);
+    request.setIsHelpful(null);
+
+    // Act & Assert
+    mockMvc
+        .perform(
+            post("/api/feedback/save")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
+
+    // Service should not be called
+    verify(feedbackService, never()).saveFeedback(anyString(), any(), any());
+  }
+
+  @Test
+  void saveFeedback_AllFieldsNull_ShouldReturnBadRequest() throws Exception {
+    // Arrange - all fields null
+    FeedbackController.SaveFeedbackRequest request = new FeedbackController.SaveFeedbackRequest();
+
+    // Act & Assert
+    mockMvc
+        .perform(
+            post("/api/feedback/save")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
+
+    // Service should not be called
+    verify(feedbackService, never()).saveFeedback(anyString(), any(), any());
+  }
 }

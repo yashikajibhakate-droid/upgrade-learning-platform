@@ -166,11 +166,11 @@ const EpisodePage = () => {
     };
 
     const handleFeedbackSubmit = async (isHelpful) => {
-        if (!email || !completedEpisodeId) return;
+        if (!completedEpisodeId) return;
 
         try {
-            // Submit feedback
-            await feedbackApi.saveFeedback(email, completedEpisodeId, isHelpful);
+            // Submit feedback - backend gets user email from auth token
+            await feedbackApi.saveFeedback(completedEpisodeId, isHelpful);
 
             // Clear session storage key since feedback was submitted
             const feedbackSessionKey = `feedback_shown_${completedEpisodeId}`;
@@ -178,10 +178,7 @@ const EpisodePage = () => {
         } catch (err) {
             console.error('Failed to save feedback:', err);
         }
-
-        // Close modal and proceed regardless of feedback submission result
-        setShowFeedbackModal(false);
-        proceedToNextEpisode();
+        // Note: FeedbackModal's onClose (handleFeedbackClose) handles modal closing and navigation
     };
 
     const handleFeedbackClose = () => {

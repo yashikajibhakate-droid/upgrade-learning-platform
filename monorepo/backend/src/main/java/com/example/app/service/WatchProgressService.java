@@ -14,91 +14,95 @@ import org.springframework.stereotype.Service;
 @Service
 public class WatchProgressService {
 
-    private final WatchHistoryRepository watchHistoryRepository;
-    private final EpisodeRepository episodeRepository;
+  private final WatchHistoryRepository watchHistoryRepository;
+  private final EpisodeRepository episodeRepository;
 
-    public WatchProgressService(
-            WatchHistoryRepository watchHistoryRepository,
-            EpisodeRepository episodeRepository) {
-        this.watchHistoryRepository = watchHistoryRepository;
-        this.episodeRepository = episodeRepository;
+  public WatchProgressService(
+      WatchHistoryRepository watchHistoryRepository, EpisodeRepository episodeRepository) {
+    this.watchHistoryRepository = watchHistoryRepository;
+    this.episodeRepository = episodeRepository;
+  }
+
+  public Optional<ContinueWatchingResponse> getContinueWatching(String userEmail) {
+    Optional<WatchHistory> incompleteWatch =
+        watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
+            userEmail);
+
+    if (incompleteWatch.isEmpty()) {
+      return Optional.empty();
     }
 
-    public Optional<ContinueWatchingResponse> getContinueWatching(String userEmail) {
-        Optional<WatchHistory> incompleteWatch = watchHistoryRepository
-                .findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
-                        userEmail);
+    WatchHistory watchHistory = incompleteWatch.get();
+    Optional<Episode> episode = episodeRepository.findById(watchHistory.getEpisodeId());
 
-        if (incompleteWatch.isEmpty()) {
-            return Optional.empty();
-        }
-
-        WatchHistory watchHistory = incompleteWatch.get();
-        Optional<Episode> episode = episodeRepository.findById(watchHistory.getEpisodeId());
-
-        if (episode.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Episode ep = episode.get();
-        Series series = ep.getSeries();
-
-        ContinueWatchingResponse response = new ContinueWatchingResponse(
-                series.getId(),
-                series.getTitle(),
-                series.getThumbnailUrl(),
-                series.getCategory(),
-                ep.getId(),
-                ep.getTitle(),
-                ep.getSequenceNumber(),
-                ep.getDurationSeconds(),
-                ep.getVideoUrl(),
-                watchHistory.getProgressSeconds(),
-                watchHistory.getLastWatchedAt());
-
-        return Optional.of(response);
+    if (episode.isEmpty()) {
+      return Optional.empty();
     }
 
-    public void saveProgress(String userEmail, UUID episodeId, Integer progressSeconds) {
-        Optional<WatchHistory> existing = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
+    Episode ep = episode.get();
+    Series series = ep.getSeries();
 
-        if (existing.isPresent()) {
-            WatchHistory watchHistory = existing.get();
-            watchHistory.setProgressSeconds(progressSeconds);
-            watchHistory.setLastWatchedAt(LocalDateTime.now());
-            watchHistoryRepository.save(watchHistory);
-        } else {
-            Optional<Episode> episode = episodeRepository.findById(episodeId);
-            if (episode.isPresent()) {
-                WatchHistory watchHistory = new WatchHistory(
-                        userEmail, episode.get().getSeries().getId(), episodeId, progressSeconds, false);
-                watchHistory.setLastWatchedAt(LocalDateTime.now());
-                watchHistoryRepository.save(watchHistory);
-            }
-        }
+    ContinueWatchingResponse response =
+        new ContinueWatchingResponse(
+            series.getId(),
+            series.getTitle(),
+            series.getThumbnailUrl(),
+            series.getCategory(),
+            ep.getId(),
+            ep.getTitle(),
+            ep.getSequenceNumber(),
+            ep.getDurationSeconds(),
+            ep.getVideoUrl(),
+            watchHistory.getProgressSeconds(),
+            watchHistory.getLastWatchedAt());
+
+    return Optional.of(response);
+  }
+
+  public void saveProgress(String userEmail, UUID episodeId, Integer progressSeconds) {
+    Optional<WatchHistory> existing =
+        watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
+
+    if (existing.isPresent()) {
+      WatchHistory watchHistory = existing.get();
+      watchHistory.setProgressSeconds(progressSeconds);
+      watchHistory.setLastWatchedAt(LocalDateTime.now());
+      watchHistoryRepository.save(watchHistory);
+    } else {
+      Optional<Episode> episode = episodeRepository.findById(episodeId);
+      if (episode.isPresent()) {
+        WatchHistory watchHistory =
+            new WatchHistory(
+                userEmail, episode.get().getSeries().getId(), episodeId, progressSeconds, false);
+        watchHistory.setLastWatchedAt(LocalDateTime.now());
+        watchHistoryRepository.save(watchHistory);
+      }
     }
+  }
 
-    public void markCompleted(String userEmail, UUID episodeId) {
-        Optional<WatchHistory> existing = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
+  public void markCompleted(String userEmail, UUID episodeId) {
+    Optional<WatchHistory> existing =
+        watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
 
-        if (existing.isPresent()) {
-            WatchHistory watchHistory = existing.get();
-            watchHistory.setCompleted(true);
-            watchHistory.setLastWatchedAt(LocalDateTime.now());
-            watchHistoryRepository.save(watchHistory);
-        } else {
-            Optional<Episode> episode = episodeRepository.findById(episodeId);
-            if (episode.isPresent()) {
-                WatchHistory watchHistory = new WatchHistory(
-                        userEmail, episode.get().getSeries().getId(), episodeId, null, true);
-                watchHistory.setLastWatchedAt(LocalDateTime.now());
-                watchHistoryRepository.save(watchHistory);
-            }
-        }
+    if (existing.isPresent()) {
+      WatchHistory watchHistory = existing.get();
+      watchHistory.setCompleted(true);
+      watchHistory.setLastWatchedAt(LocalDateTime.now());
+      watchHistoryRepository.save(watchHistory);
+    } else {
+      Optional<Episode> episode = episodeRepository.findById(episodeId);
+      if (episode.isPresent()) {
+        WatchHistory watchHistory =
+            new WatchHistory(userEmail, episode.get().getSeries().getId(), episodeId, null, true);
+        watchHistory.setLastWatchedAt(LocalDateTime.now());
+        watchHistoryRepository.save(watchHistory);
+      }
     }
+  }
 
-    public boolean isEpisodeCompleted(String userEmail, UUID episodeId) {
-        Optional<WatchHistory> history = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
-        return history.isPresent() && history.get().isCompleted();
-    }
+  public boolean isEpisodeCompleted(String userEmail, UUID episodeId) {
+    Optional<WatchHistory> history =
+        watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
+    return history.isPresent() && history.get().isCompleted();
+  }
 }
