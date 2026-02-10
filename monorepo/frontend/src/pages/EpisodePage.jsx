@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import api, { watchProgressApi, feedbackApi } from '../services/api';
+import api, { watchProgressApi, feedbackApi, mcqApi } from '../services/api';
 import VideoPlayer from '../components/VideoPlayer';
 import FeedbackModal from '../components/FeedbackModal';
+import MCQModal from '../components/MCQModal';
 import { ArrowLeft, PlayCircle, Loader } from 'lucide-react';
 
 const EpisodePage = () => {
@@ -16,7 +17,11 @@ const EpisodePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [showMCQModal, setShowMCQModal] = useState(false);
+    const [mcqData, setMCQData] = useState(null);
     const [completedEpisodeId, setCompletedEpisodeId] = useState(null);
+    const [playingRefresher, setPlayingRefresher] = useState(false);
+    const [refresherVideoUrl, setRefresherVideoUrl] = useState(null);
     const email = localStorage.getItem('userEmail');
     const progressSaveTimerRef = useRef(null);
     const lastProgressRef = useRef(0); // Track current progress for cleanup
@@ -175,6 +180,23 @@ const EpisodePage = () => {
             // Clear session storage key since feedback was submitted
             const feedbackSessionKey = `feedback_shown_${completedEpisodeId}`;
             sessionStorage.removeItem(feedbackSessionKey);
+
+            // If feedback is helpful, check for MCQ
+            if (isHelpful) {
+                try {
+                    const mcqResponse = await mcqApi.getMCQ(completedEpisodeId);
+                    if (mcqResponse.data) {
+                        // MCQ exists, show MCQ modal
+                        setMCQData(mcqResponse.data);
+                        setShowMCQModal(true);
+                        // Don't proceed to next episode yet
+                        return;
+                    }
+                } catch (err) {
+                    // No MCQ exists or error fetching - proceed normally
+                    console.log('No MCQ found for this episode or error:', err.message);
+                }
+            }
         } catch (err) {
             console.error('Failed to save feedback:', err);
         }
@@ -189,6 +211,42 @@ const EpisodePage = () => {
         }
 
         setShowFeedbackModal(false);
+        proceedToNextEpisode();
+    };
+
+    const handleMCQCorrect = () => {
+        // Close MCQ modal and proceed to next episode
+        setShowMCQModal(false);
+        setMCQData(null);
+        proceedToNextEpisode();
+    };
+
+    const handleMCQIncorrect = (videoUrl) => {
+        // Close MCQ modal and play refresher video
+        setShowMCQModal(false);
+        setMCQData(null);
+
+        if (videoUrl) {
+            // Play refresher video
+            setRefresherVideoUrl(videoUrl);
+            setPlayingRefresher(true);
+        } else {
+            // No refresher video, proceed to next episode
+            proceedToNextEpisode();
+        }
+    };
+
+    const handleRefresherEnded = () => {
+        // Refresher video finished, proceed to next episode
+        setPlayingRefresher(false);
+        setRefresherVideoUrl(null);
+        proceedToNextEpisode();
+    };
+
+    const handleMCQClose = () => {
+        // User closed MCQ modal without answering
+        setShowMCQModal(false);
+        setMCQData(null);
         proceedToNextEpisode();
     };
 
@@ -242,12 +300,12 @@ const EpisodePage = () => {
                     {currentEpisode ? (
                         <>
                             <VideoPlayer
-                                src={currentEpisode.videoUrl}
+                                src={playingRefresher ? refresherVideoUrl : currentEpisode.videoUrl}
                                 poster={series.thumbnailUrl}
-                                title={currentEpisode.title}
-                                initialTime={initialTime}
-                                onProgressUpdate={handleProgressUpdate}
-                                onEnded={handleEpisodeEnded}
+                                title={playingRefresher ? 'Refresher Video' : currentEpisode.title}
+                                initialTime={playingRefresher ? 0 : initialTime}
+                                onProgressUpdate={playingRefresher ? undefined : handleProgressUpdate}
+                                onEnded={playingRefresher ? handleRefresherEnded : handleEpisodeEnded}
                             />
                             <div className="bg-gray-800 p-6 rounded-2xl">
                                 <h2 className="text-2xl font-bold mb-2">{currentEpisode.title}</h2>
@@ -299,6 +357,15 @@ const EpisodePage = () => {
                 onClose={handleFeedbackClose}
                 onSubmit={handleFeedbackSubmit}
                 episodeTitle={currentEpisode?.title}
+            />
+
+            {/* MCQ Modal */}
+            <MCQModal
+                isOpen={showMCQModal}
+                mcqData={mcqData}
+                onCorrect={handleMCQCorrect}
+                onIncorrect={handleMCQIncorrect}
+                onClose={handleMCQClose}
             />
         </div>
     );

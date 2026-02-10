@@ -52,4 +52,11 @@ export const feedbackApi = {
         api.post('/api/feedback/exists', { episodeId }),
 };
 
+// MCQ API Methods
+export const mcqApi = {
+    getMCQ: (episodeId) => api.get(`/api/mcq/${episodeId}`),
+    validateAnswer: (mcqId, selectedOptionId) =>
+        api.post('/api/mcq/validate', { mcqId, selectedOptionId }),
+};
+
 export default api;
