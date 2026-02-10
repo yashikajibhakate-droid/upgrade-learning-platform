@@ -186,7 +186,8 @@ const EpisodePage = () => {
                 try {
                     const mcqResponse = await mcqApi.getMCQ(completedEpisodeId);
                     if (mcqResponse.data) {
-                        // MCQ exists, show MCQ modal
+                        // MCQ exists, close feedback modal and show MCQ modal
+                        setShowFeedbackModal(false);
                         setMCQData(mcqResponse.data);
                         setShowMCQModal(true);
                         // Don't proceed to next episode yet
