@@ -8,6 +8,9 @@ import com.example.app.repository.EpisodeRepository;
 import com.example.app.repository.MCQOptionRepository;
 import com.example.app.repository.MCQRepository;
 import com.example.app.repository.SeriesRepository;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -211,13 +214,19 @@ public class DataSeeder implements CommandLineRunner {
       mcq = mcqRepository.save(mcq);
 
       // Create and save options
-      MCQOption option1 = new MCQOption(mcq, correctAnswer, true, 1);
-      MCQOption option2 = new MCQOption(mcq, wrongAnswer1, false, 2);
-      MCQOption option3 = new MCQOption(mcq, wrongAnswer2, false, 3);
+      // Create and save options with randomized order
+      List<MCQOption> options = new ArrayList<>();
+      options.add(new MCQOption(mcq, correctAnswer, true, 0));
+      options.add(new MCQOption(mcq, wrongAnswer1, false, 0));
+      options.add(new MCQOption(mcq, wrongAnswer2, false, 0));
 
-      mcqOptionRepository.save(option1);
-      mcqOptionRepository.save(option2);
-      mcqOptionRepository.save(option3);
+      Collections.shuffle(options);
+
+      for (int i = 0; i < options.size(); i++) {
+        MCQOption option = options.get(i);
+        option.setSequenceNumber(i + 1);
+        mcqOptionRepository.save(option);
+      }
 
       System.out.println(
           "Created MCQ for episode: "
