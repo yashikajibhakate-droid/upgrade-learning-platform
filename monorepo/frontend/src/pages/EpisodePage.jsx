@@ -201,7 +201,10 @@ const EpisodePage = () => {
         } catch (err) {
             console.error('Failed to save feedback:', err);
         }
-        // Note: FeedbackModal's onClose (handleFeedbackClose) handles modal closing and navigation
+
+        // No MCQ found or feedback process complete - proceed to next episode
+        setShowFeedbackModal(false);
+        proceedToNextEpisode();
     };
 
     const handleFeedbackClose = () => {

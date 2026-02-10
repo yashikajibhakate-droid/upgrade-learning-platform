@@ -41,8 +41,9 @@ describe('ContinueWatchingSection', () => {
         expect(screen.getByText('Test Series')).toBeInTheDocument();
         expect(screen.getByText(/Test Episode/i)).toBeInTheDocument();
         expect(screen.getByText('Tech')).toBeInTheDocument();
-        expect(screen.getByText(/2 min watched/i)).toBeInTheDocument();
-        expect(screen.getByText(/10 min total/i)).toBeInTheDocument();
+        // 120s = 2 min, 600s = 10 min
+        expect(screen.getByText('2 min watched')).toBeInTheDocument();
+        expect(screen.getByText('10 min total')).toBeInTheDocument();
     });
 
     it('displays correct progress percentage', () => {
@@ -55,6 +56,23 @@ describe('ContinueWatchingSection', () => {
         const progressBar = container.querySelector('div[style*="width"]');
         // 120/600 = 20%
         expect(progressBar).toHaveStyle({ width: '20%' });
+    });
+
+    it('displays seconds for short durations', () => {
+        const shortData = {
+            ...mockData,
+            episodeDurationSeconds: 45,
+            progressSeconds: 15,
+        };
+
+        render(
+            <BrowserRouter>
+                <ContinueWatchingSection data={shortData} />
+            </BrowserRouter>
+        );
+
+        expect(screen.getByText('15 sec watched')).toBeInTheDocument();
+        expect(screen.getByText('45 sec total')).toBeInTheDocument();
     });
 
     it('navigates to episode on click', () => {

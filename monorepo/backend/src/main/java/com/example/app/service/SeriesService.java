@@ -70,6 +70,11 @@ public class SeriesService {
         .collect(Collectors.groupingBy(WatchHistory::getSeriesId, Collectors.counting()));
 
     List<Series> filteredRecommended = matchingSeries.stream()
+        .sorted((s1, s2) -> {
+          int w1 = user.getInterestWeights().getOrDefault(s1.getCategory(), 0);
+          int w2 = user.getInterestWeights().getOrDefault(s2.getCategory(), 0);
+          return Integer.compare(w2, w1); // Descending order
+        })
         .filter(
             series -> !isSeriesCompleted(series, completedCounts.getOrDefault(series.getId(), 0L)))
         // Exclude the series from Continue Watching
