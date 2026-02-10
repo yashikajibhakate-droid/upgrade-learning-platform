@@ -16,7 +16,7 @@ public class MCQ {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "episode_id", nullable = false, unique = true)
     @NotNull(message = "Episode ID is required")
     private UUID episodeId;
 
