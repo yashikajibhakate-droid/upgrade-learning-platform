@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, X, Loader } from 'lucide-react';
 import { mcqApi } from '../services/api';
 
@@ -6,6 +6,15 @@ const MCQModal = ({ isOpen, mcqData, onCorrect, onIncorrect, onClose }) => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationResult, setValidationResult] = useState(null);
+
+    // Reset state when modal opens or data changes
+    useEffect(() => {
+        if (isOpen) {
+            setSelectedOption(null);
+            setIsSubmitting(false);
+            setValidationResult(null);
+        }
+    }, [isOpen, mcqData]);
 
     if (!isOpen || !mcqData) return null;
 
