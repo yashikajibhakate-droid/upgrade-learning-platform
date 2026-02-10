@@ -23,11 +23,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class WatchProgressServiceTest {
 
-  @Mock private WatchHistoryRepository watchHistoryRepository;
-  @Mock private EpisodeRepository episodeRepository;
-  @Mock private SeriesRepository seriesRepository;
+  @Mock
+  private WatchHistoryRepository watchHistoryRepository;
+  @Mock
+  private EpisodeRepository episodeRepository;
+  @Mock
+  private SeriesRepository seriesRepository;
 
-  @InjectMocks private WatchProgressService watchProgressService;
+  @InjectMocks
+  private WatchProgressService watchProgressService;
 
   @Test
   void testGetContinueWatching_WithIncompleteEpisode_ReturnsData() {
@@ -42,7 +46,7 @@ class WatchProgressServiceTest {
     watchHistory.setLastWatchedAt(LocalDateTime.now());
 
     when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
-            email))
+        email))
         .thenReturn(Optional.of(watchHistory));
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
@@ -59,7 +63,7 @@ class WatchProgressServiceTest {
     String email = "test@example.com";
 
     when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
-            email))
+        email))
         .thenReturn(Optional.empty());
 
     Optional<ContinueWatchingResponse> result = watchProgressService.getContinueWatching(email);
@@ -92,10 +96,13 @@ class WatchProgressServiceTest {
     UUID seriesId = UUID.randomUUID();
     Integer progressSeconds = 240;
 
+    Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
+    Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
     WatchHistory existingHistory = new WatchHistory(email, seriesId, episodeId, 120, false);
 
     when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
         .thenReturn(Optional.of(existingHistory));
+    when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
     watchProgressService.saveProgress(email, episodeId, progressSeconds);
 
