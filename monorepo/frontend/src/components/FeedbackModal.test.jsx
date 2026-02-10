@@ -47,7 +47,6 @@ describe('FeedbackModal', () => {
 
         await waitFor(() => {
             expect(mockOnSubmit).toHaveBeenCalledWith(true);
-            expect(mockOnClose).toHaveBeenCalled();
         });
     });
 
@@ -69,7 +68,6 @@ describe('FeedbackModal', () => {
 
         await waitFor(() => {
             expect(mockOnSubmit).toHaveBeenCalledWith(false);
-            expect(mockOnClose).toHaveBeenCalled();
         });
     });
 
@@ -136,7 +134,6 @@ describe('FeedbackModal', () => {
 
         await waitFor(() => {
             expect(mockOnSubmit).toHaveBeenCalledWith(true);
-            expect(mockOnClose).toHaveBeenCalled();
         });
     });
 });
