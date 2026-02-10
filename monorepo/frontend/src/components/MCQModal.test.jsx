@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MCQModal from './MCQModal';
+import { mcqApi } from '../services/api';
 
-// Mock fetch API
-global.fetch = vi.fn();
+// Mock mcqApi
+vi.mock('../services/api', () => ({
+    mcqApi: {
+        validateAnswer: vi.fn()
+    }
+}));
 
 describe('MCQModal', () => {
     const mockMCQData = {
@@ -22,7 +27,6 @@ describe('MCQModal', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        fetch.mockClear();
     });
 
     it('should not render when isOpen is false', () => {
@@ -93,9 +97,8 @@ describe('MCQModal', () => {
     });
 
     it('should validate correct answer and call onCorrect', async () => {
-        fetch.mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({ isCorrect: true })
+        mcqApi.validateAnswer.mockResolvedValue({
+            data: { correct: true }
         });
 
         render(
@@ -118,15 +121,7 @@ describe('MCQModal', () => {
 
         // Wait for API call
         await waitFor(() => {
-            expect(fetch).toHaveBeenCalledWith('/api/mcq/validate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                    mcqId: 'mcq-123',
-                    selectedOptionId: 'option-1'
-                })
-            });
+            expect(mcqApi.validateAnswer).toHaveBeenCalledWith('mcq-123', 'option-1');
         });
 
         // Wait for onCorrect to be called (after 1.5s delay)
@@ -136,12 +131,11 @@ describe('MCQModal', () => {
     });
 
     it('should validate incorrect answer and call onIncorrect with refresher URL', async () => {
-        fetch.mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                isCorrect: false,
+        mcqApi.validateAnswer.mockResolvedValue({
+            data: {
+                correct: false,
                 refresherVideoUrl: 'https://example.com/refresher.mp4'
-            })
+            }
         });
 
         render(
@@ -169,10 +163,9 @@ describe('MCQModal', () => {
     });
 
     it('should show loading state while submitting', async () => {
-        fetch.mockImplementationOnce(() =>
+        mcqApi.validateAnswer.mockImplementationOnce(() =>
             new Promise(resolve => setTimeout(() => resolve({
-                ok: true,
-                json: async () => ({ isCorrect: true })
+                data: { correct: true }
             }), 100))
         );
 
@@ -197,7 +190,7 @@ describe('MCQModal', () => {
     });
 
     it('should handle API errors gracefully by calling onCorrect', async () => {
-        fetch.mockRejectedValueOnce(new Error('Network error'));
+        mcqApi.validateAnswer.mockRejectedValue(new Error('Network error'));
 
         render(
             <MCQModal
