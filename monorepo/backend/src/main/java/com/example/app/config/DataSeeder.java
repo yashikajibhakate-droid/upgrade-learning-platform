@@ -1,9 +1,16 @@
 package com.example.app.config;
 
 import com.example.app.model.Episode;
+import com.example.app.model.MCQ;
+import com.example.app.model.MCQOption;
 import com.example.app.model.Series;
 import com.example.app.repository.EpisodeRepository;
+import com.example.app.repository.MCQOptionRepository;
+import com.example.app.repository.MCQRepository;
 import com.example.app.repository.SeriesRepository;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -12,9 +19,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class DataSeeder implements CommandLineRunner {
 
-  @Autowired private SeriesRepository seriesRepository;
+  @Autowired
+  private SeriesRepository seriesRepository;
 
-  @Autowired private EpisodeRepository episodeRepository;
+  @Autowired
+  private EpisodeRepository episodeRepository;
+
+  @Autowired
+  private MCQRepository mcqRepository;
+
+  @Autowired
+  private MCQOptionRepository mcqOptionRepository;
 
   @Override
   @Transactional
@@ -69,17 +84,19 @@ public class DataSeeder implements CommandLineRunner {
         "Personal Finance",
         "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80");
 
+    System.out.println("Seeding MCQs for all episodes...");
+    seedMCQs();
+
     System.out.println("Seeding completed.");
   }
 
   private void createOrUpdateSeries(
       String title, String description, String category, String imageUrl) {
 
-    Series series =
-        seriesRepository.findAll().stream()
-            .filter(s -> s.getTitle().equals(title))
-            .findFirst()
-            .orElse(null);
+    Series series = seriesRepository.findAll().stream()
+        .filter(s -> s.getTitle().equals(title))
+        .findFirst()
+        .orElse(null);
 
     if (series == null) {
       series = new Series(title, description, category, imageUrl);
@@ -93,8 +110,7 @@ public class DataSeeder implements CommandLineRunner {
   }
 
   private void ensureEpisodes(Series series) {
-    java.util.List<Episode> existingEpisodes =
-        episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
+    java.util.List<Episode> existingEpisodes = episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
 
     // BigBuckBunny.mp4 is 596 seconds (9:56)
     createOrUpdateEpisode(
@@ -129,15 +145,14 @@ public class DataSeeder implements CommandLineRunner {
       String title,
       String videoUrl,
       int duration) {
-    Episode episode =
-        existingEpisodes.stream()
-            .filter(
-                e -> {
-                  Integer seq = e.getSequenceNumber();
-                  return seq != null && seq == sequenceNumber;
-                })
-            .findFirst()
-            .orElse(null);
+    Episode episode = existingEpisodes.stream()
+        .filter(
+            e -> {
+              Integer seq = e.getSequenceNumber();
+              return seq != null && seq == sequenceNumber;
+            })
+        .findFirst()
+        .orElse(null);
 
     if (episode == null) {
       episode = new Episode(series, title, videoUrl, duration, sequenceNumber);
@@ -147,5 +162,82 @@ public class DataSeeder implements CommandLineRunner {
       episode.setDurationSeconds(duration);
     }
     episodeRepository.save(episode);
+  }
+
+  private void seedMCQs() {
+    // Get all episodes
+    java.util.List<Episode> allEpisodes = episodeRepository.findAll();
+    int mcqCreatedCount = 0;
+
+    for (Episode episode : allEpisodes) {
+      // Check if MCQ already exists for this episode
+      if (mcqRepository.findByEpisodeId(episode.getId()).isPresent()) {
+        continue; // Skip if MCQ already exists
+      }
+
+      // Create MCQ based on episode sequence number
+      String question;
+      String correctAnswer;
+      String wrongAnswer1;
+      String wrongAnswer2;
+
+      switch (episode.getSequenceNumber()) {
+        case 1:
+          question = "What is the main concept introduced in this introductory episode?";
+          correctAnswer = "Understanding the fundamental principles";
+          wrongAnswer1 = "Advanced optimization techniques";
+          wrongAnswer2 = "Final implementation details";
+          break;
+        case 2:
+          question = "What key insight does this deep dive episode provide?";
+          correctAnswer = "Practical application of core concepts";
+          wrongAnswer1 = "Surface-level overview only";
+          wrongAnswer2 = "Unrelated theoretical frameworks";
+          break;
+        case 3:
+          question = "What is the main takeaway from this conclusion?";
+          correctAnswer = "Synthesizing all learned concepts";
+          wrongAnswer1 = "Starting from basics again";
+          wrongAnswer2 = "Introducing entirely new topics";
+          break;
+        default:
+          question = "What did you learn in this episode?";
+          correctAnswer = "Key concepts and practical applications";
+          wrongAnswer1 = "Nothing significant";
+          wrongAnswer2 = "Only theoretical background";
+      }
+
+      // Create and save MCQ
+      MCQ mcq = new MCQ(
+          episode.getId(),
+          question,
+          "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
+      mcq = mcqRepository.save(mcq);
+
+      // Create and save options
+      // Create and save options with randomized order
+      List<MCQOption> options = new ArrayList<>();
+      options.add(new MCQOption(mcq, correctAnswer, true, 0));
+      options.add(new MCQOption(mcq, wrongAnswer1, false, 0));
+      options.add(new MCQOption(mcq, wrongAnswer2, false, 0));
+
+      Collections.shuffle(options);
+
+      for (int i = 0; i < options.size(); i++) {
+        MCQOption option = options.get(i);
+        option.setSequenceNumber(i + 1);
+        mcqOptionRepository.save(option);
+      }
+
+      System.out.println(
+          "Created MCQ for episode: "
+              + episode.getTitle()
+              + " (ID: "
+              + episode.getId()
+              + ")");
+      mcqCreatedCount++;
+    }
+
+    System.out.println("MCQ seeding completed. Created MCQs for " + mcqCreatedCount + " episodes.");
   }
 }

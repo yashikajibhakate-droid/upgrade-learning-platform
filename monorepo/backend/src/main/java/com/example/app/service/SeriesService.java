@@ -16,13 +16,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class SeriesService {
 
-  @Autowired private UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
 
-  @Autowired private SeriesRepository seriesRepository;
+  @Autowired
+  private SeriesRepository seriesRepository;
 
-  @Autowired private WatchHistoryRepository watchHistoryRepository;
+  @Autowired
+  private WatchHistoryRepository watchHistoryRepository;
 
-  @Autowired private EpisodeRepository episodeRepository;
+  @Autowired
+  private EpisodeRepository episodeRepository;
 
   public RecommendationResponse getRecommendations(String email) {
     Optional<User> userOpt = userRepository.findByEmail(email);
@@ -35,8 +39,8 @@ public class SeriesService {
 
     // Get the series ID from Continue Watching to exclude it from recommendations
     UUID continueWatchingSeriesId = null;
-    Optional<WatchHistory> continueWatching =
-        watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
+    Optional<WatchHistory> continueWatching = watchHistoryRepository
+        .findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
             email);
     if (continueWatching.isPresent()) {
       continueWatchingSeriesId = continueWatching.get().getSeriesId();
@@ -47,10 +51,9 @@ public class SeriesService {
       List<Series> all = seriesRepository.findAll();
       // Exclude continue watching series
       if (excludeSeriesId != null) {
-        all =
-            all.stream()
-                .filter(series -> !series.getId().equals(excludeSeriesId))
-                .collect(Collectors.toList());
+        all = all.stream()
+            .filter(series -> !series.getId().equals(excludeSeriesId))
+            .collect(Collectors.toList());
       }
       return new RecommendationResponse(List.of(), all);
     }
@@ -60,31 +63,26 @@ public class SeriesService {
 
     // 2. Filter out 100% completed series
     // Optimization: Fetch all watch history for user once
-    List<WatchHistory> userHistory =
-        watchHistoryRepository.findByUserEmailAndIsCompletedTrue(email);
+    List<WatchHistory> userHistory = watchHistoryRepository.findByUserEmailAndIsCompletedTrue(email);
 
     // Map seriesId -> count of completed episodes
-    Map<UUID, Long> completedCounts =
-        userHistory.stream()
-            .collect(Collectors.groupingBy(WatchHistory::getSeriesId, Collectors.counting()));
+    Map<UUID, Long> completedCounts = userHistory.stream()
+        .collect(Collectors.groupingBy(WatchHistory::getSeriesId, Collectors.counting()));
 
-    List<Series> filteredRecommended =
-        matchingSeries.stream()
-            .filter(
-                series ->
-                    !isSeriesCompleted(series, completedCounts.getOrDefault(series.getId(), 0L)))
-            // Exclude the series from Continue Watching
-            .filter(series -> excludeSeriesId == null || !series.getId().equals(excludeSeriesId))
-            .collect(Collectors.toList());
+    List<Series> filteredRecommended = matchingSeries.stream()
+        .filter(
+            series -> !isSeriesCompleted(series, completedCounts.getOrDefault(series.getId(), 0L)))
+        // Exclude the series from Continue Watching
+        .filter(series -> excludeSeriesId == null || !series.getId().equals(excludeSeriesId))
+        .collect(Collectors.toList());
 
     // 3. Fetch "others" (not in interests)
     List<Series> otherSeries = seriesRepository.findByCategoryNotIn(interests);
     // Also exclude continue watching series from "others"
     if (excludeSeriesId != null) {
-      otherSeries =
-          otherSeries.stream()
-              .filter(series -> !series.getId().equals(excludeSeriesId))
-              .collect(Collectors.toList());
+      otherSeries = otherSeries.stream()
+          .filter(series -> !series.getId().equals(excludeSeriesId))
+          .collect(Collectors.toList());
     }
 
     return new RecommendationResponse(filteredRecommended, otherSeries);
@@ -95,13 +93,13 @@ public class SeriesService {
   }
 
   private boolean isSeriesCompleted(Series series, long userCompletedCount) {
-    if (userCompletedCount == 0) return false;
+    if (userCompletedCount == 0)
+      return false;
 
     // This is N+1, but assuming small number of recommended series, it's acceptable
     // for now.
     // Better: Pre-fetch episode counts for all candidate series.
-    long totalEpisodes =
-        episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId()).size();
+    long totalEpisodes = episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId()).size();
 
     return totalEpisodes > 0 && userCompletedCount >= totalEpisodes;
   }
