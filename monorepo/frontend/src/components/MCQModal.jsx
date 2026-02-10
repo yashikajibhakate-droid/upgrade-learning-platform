@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle, XCircle, X, Loader } from 'lucide-react';
 import { mcqApi } from '../services/api';
 
@@ -6,6 +6,7 @@ const MCQModal = ({ isOpen, mcqData, onCorrect, onIncorrect, onClose }) => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validationResult, setValidationResult] = useState(null);
+    const timeoutRef = useRef(null);
 
     // Reset state when modal opens or data changes
     useEffect(() => {
@@ -15,6 +16,22 @@ const MCQModal = ({ isOpen, mcqData, onCorrect, onIncorrect, onClose }) => {
             setValidationResult(null);
         }
     }, [isOpen, mcqData]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+    const handleClose = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+        onClose();
+    };
 
     if (!isOpen || !mcqData) return null;
 
@@ -32,7 +49,11 @@ const MCQModal = ({ isOpen, mcqData, onCorrect, onIncorrect, onClose }) => {
             setValidationResult(result);
 
             // Wait a moment to show result, then trigger appropriate callback
-            setTimeout(() => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+
+            timeoutRef.current = setTimeout(() => {
                 if (result.correct) {
                     onCorrect();
                 } else {
@@ -58,11 +79,10 @@ const MCQModal = ({ isOpen, mcqData, onCorrect, onIncorrect, onClose }) => {
             <div className="relative bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 border border-gray-700">
                 {/* Close Button */}
                 <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 p-2 hover:bg-gray-800 rounded-full transition-colors"
-                    disabled={isSubmitting}
+                    onClick={handleClose}
+                    className="p-1 hover:bg-gray-800 rounded-full transition-colors"
                 >
-                    <X size={20} className="text-gray-400" />
+                    <X className="w-5 h-5 text-gray-400" />
                 </button>
 
                 {/* Content */}
