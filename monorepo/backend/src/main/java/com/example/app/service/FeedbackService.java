@@ -57,15 +57,12 @@ public class FeedbackService {
 
       // If feedback value changed, adjust weight
       if (!feedback.getIsHelpful().equals(isHelpful)) {
-        // remove old effect
+        // Calculate the weight delta: oldWeight is +5 for helpful or -5 for not
+        // helpful.
+        // Compute change as weightChange - oldWeight, update the feedback entity
+        // (feedback.setIsHelpful, feedback.setUpdatedAt, feedbackRepository.save)
+        // and then call updateUserInterestWeight(user, category, change).
         int oldWeight = feedback.getIsHelpful() ? 5 : -5;
-        // if old was helpful (+5), we subtract 5. if old was not helpful (-5), we
-        // should have added 5?
-        // Wait, simpler:
-        // New weight - Old weight
-        // If changed from Helpful (+5) to Not Helpful (-5): change is -10
-        // If changed from Not Helpful (-5) to Helpful (+5): change is +10
-
         int change = weightChange - oldWeight;
 
         feedback.setIsHelpful(isHelpful);
