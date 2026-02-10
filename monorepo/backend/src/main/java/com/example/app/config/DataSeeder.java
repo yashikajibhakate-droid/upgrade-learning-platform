@@ -167,6 +167,7 @@ public class DataSeeder implements CommandLineRunner {
   private void seedMCQs() {
     // Get all episodes
     java.util.List<Episode> allEpisodes = episodeRepository.findAll();
+    int mcqCreatedCount = 0;
 
     for (Episode episode : allEpisodes) {
       // Check if MCQ already exists for this episode
@@ -234,8 +235,9 @@ public class DataSeeder implements CommandLineRunner {
               + " (ID: "
               + episode.getId()
               + ")");
+      mcqCreatedCount++;
     }
 
-    System.out.println("MCQ seeding completed. Created MCQs for " + allEpisodes.size() + " episodes.");
+    System.out.println("MCQ seeding completed. Created MCQs for " + mcqCreatedCount + " episodes.");
   }
 }
