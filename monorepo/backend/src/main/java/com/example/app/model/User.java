@@ -23,7 +23,14 @@ public class User {
   @Column(name = "interest")
   private java.util.Set<String> interests = new java.util.HashSet<>();
 
-  public User() {}
+  @ElementCollection(fetch = FetchType.EAGER)
+  @CollectionTable(name = "user_interest_weights", joinColumns = @JoinColumn(name = "user_id"))
+  @MapKeyColumn(name = "category")
+  @Column(name = "weight")
+  private java.util.Map<String, Integer> interestWeights = new java.util.HashMap<>();
+
+  public User() {
+  }
 
   public User(String email) {
     this.email = email;
@@ -51,5 +58,13 @@ public class User {
 
   public void setInterests(java.util.Set<String> interests) {
     this.interests = interests;
+  }
+
+  public java.util.Map<String, Integer> getInterestWeights() {
+    return interestWeights;
+  }
+
+  public void setInterestWeights(java.util.Map<String, Integer> interestWeights) {
+    this.interestWeights = interestWeights;
   }
 }

@@ -7,7 +7,16 @@ const ContinueWatchingSection = ({ data }) => {
 
     if (!data) return null;
 
-    const progressPercent = (data.progressSeconds / data.episodeDurationSeconds) * 100;
+    const formatDuration = (seconds) => {
+        if (!seconds) return '0 min';
+        if (seconds < 60) return `${Math.floor(seconds)} sec`;
+        return `${Math.floor(seconds / 60)} min`;
+    };
+
+    // Prevent division by zero
+    const duration = data.episodeDurationSeconds || 0;
+    const progress = data.progressSeconds || 0;
+    const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
 
     const handleClick = () => {
         navigate(`/series/${data.seriesId}/watch?episodeId=${data.episodeId}`);
@@ -55,8 +64,8 @@ const ContinueWatchingSection = ({ data }) => {
                         {/* Progress Bar */}
                         <div className="space-y-2">
                             <div className="flex justify-between text-xs text-gray-500">
-                                <span>{Math.floor(data.progressSeconds / 60)} min watched</span>
-                                <span>{Math.floor(data.episodeDurationSeconds / 60)} min total</span>
+                                <span>{formatDuration(progress)} watched</span>
+                                <span>{formatDuration(duration)} total</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                                 <div

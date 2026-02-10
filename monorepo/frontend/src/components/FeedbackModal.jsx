@@ -14,8 +14,6 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit, episodeTitle }) => {
             console.error('Failed to submit feedback:', error);
         } finally {
             setIsSubmitting(false);
-            // Always let parent's onClose handle modal closing and navigation
-            onClose();
         }
     };
 

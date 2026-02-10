@@ -22,12 +22,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SeriesServiceTest {
 
-  @Mock private UserRepository userRepository;
-  @Mock private SeriesRepository seriesRepository;
-  @Mock private WatchHistoryRepository watchHistoryRepository;
-  @Mock private EpisodeRepository episodeRepository;
+  @Mock
+  private UserRepository userRepository;
+  @Mock
+  private SeriesRepository seriesRepository;
+  @Mock
+  private WatchHistoryRepository watchHistoryRepository;
+  @Mock
+  private EpisodeRepository episodeRepository;
 
-  @InjectMocks private SeriesService seriesService;
+  @InjectMocks
+  private SeriesService seriesService;
 
   @Test
   void testGetRecommendations_Success() {
@@ -69,5 +74,44 @@ class SeriesServiceTest {
 
     RecommendationResponse response = seriesService.getRecommendations(email);
     assertNotNull(response);
+  }
+
+  @Test
+  void testGetRecommendations_SortsByInterestWeight() {
+    String email = "test@example.com";
+    User user = new User(email);
+    user.setInterests(new HashSet<>(List.of("Python", "Java")));
+    // Set weights: Python (10) > Java (5)
+    user.getInterestWeights().put("Python", 10);
+    user.getInterestWeights().put("Java", 5);
+
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+
+    Series javaSeries = new Series();
+    javaSeries.setId(UUID.randomUUID());
+    javaSeries.setTitle("Java Basics");
+    javaSeries.setCategory("Java"); // Matched interest, weight 5
+
+    Series pythonSeries = new Series();
+    pythonSeries.setId(UUID.randomUUID());
+    pythonSeries.setTitle("Python Basics");
+    pythonSeries.setCategory("Python"); // Matched interest, weight 10
+
+    // Repository returns them in arbitrary order (e.g. Java first)
+    when(seriesRepository.findByCategoryIn(any())).thenReturn(List.of(javaSeries, pythonSeries));
+
+    when(watchHistoryRepository.findByUserEmailAndIsCompletedTrue(email))
+        .thenReturn(Collections.emptyList());
+    when(seriesRepository.findByCategoryNotIn(any())).thenReturn(Collections.emptyList());
+
+    RecommendationResponse response = seriesService.getRecommendations(email);
+
+    assertNotNull(response);
+    List<Series> recommended = response.getRecommended();
+    assertEquals(2, recommended.size());
+
+    // Should be Python first (weight 10), then Java (weight 5)
+    assertEquals("Python Basics", recommended.get(0).getTitle());
+    assertEquals("Java Basics", recommended.get(1).getTitle());
   }
 }
