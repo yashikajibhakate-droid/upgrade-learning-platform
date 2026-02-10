@@ -24,6 +24,20 @@ public class WatchProgressController {
     return response.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
   }
 
+  /**
+   * Save watch progress for an episode.
+   * 
+   * @param request The progress data (email, episodeId, progressSeconds)
+   * @return Success message
+   * @throws com.example.app.exception.ResourceNotFoundException if episode does
+   *                                                             not exist
+   *                                                             (returns 404)
+   * @throws IllegalArgumentException                            if required
+   *                                                             fields are
+   *                                                             missing (handled
+   *                                                             by
+   *                                                             Spring/Jackson)
+   */
   @PostMapping("/save")
   public ResponseEntity<Map<String, String>> saveProgress(
       @RequestBody SaveProgressRequest request) {

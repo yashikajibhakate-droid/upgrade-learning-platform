@@ -1,6 +1,7 @@
 package com.example.app.service;
 
 import com.example.app.dto.ContinueWatchingResponse;
+import com.example.app.exception.ResourceNotFoundException;
 import com.example.app.model.Episode;
 import com.example.app.model.Series;
 import com.example.app.model.WatchHistory;
@@ -59,14 +60,15 @@ public class WatchProgressService {
   }
 
   public void saveProgress(String userEmail, UUID episodeId, Integer progressSeconds) {
+    if (progressSeconds == null) {
+      progressSeconds = 0;
+    }
+
     Optional<WatchHistory> existing = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
 
     // Fetch episode to get duration for clamping
-    Optional<Episode> episodeOpt = episodeRepository.findById(episodeId);
-    if (episodeOpt.isEmpty()) {
-      return; // Cannot save progress for non-existent episode
-    }
-    Episode episode = episodeOpt.get();
+    Episode episode = episodeRepository.findById(episodeId)
+        .orElseThrow(() -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
 
     // Clamp progress to duration
     int duration = episode.getDurationSeconds();
@@ -94,13 +96,13 @@ public class WatchProgressService {
       watchHistory.setLastWatchedAt(LocalDateTime.now());
       watchHistoryRepository.save(watchHistory);
     } else {
-      Optional<Episode> episode = episodeRepository.findById(episodeId);
-      if (episode.isPresent()) {
-        WatchHistory watchHistory = new WatchHistory(userEmail, episode.get().getSeries().getId(), episodeId, null,
-            true);
-        watchHistory.setLastWatchedAt(LocalDateTime.now());
-        watchHistoryRepository.save(watchHistory);
-      }
+      Episode episode = episodeRepository.findById(episodeId)
+          .orElseThrow(() -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
+
+      WatchHistory watchHistory = new WatchHistory(userEmail, episode.getSeries().getId(), episodeId, null,
+          true);
+      watchHistory.setLastWatchedAt(LocalDateTime.now());
+      watchHistoryRepository.save(watchHistory);
     }
   }
 
