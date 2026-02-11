@@ -87,4 +87,9 @@ describe('VideoPlayer', () => {
         Object.defineProperty(document, 'fullscreenElement', { value: null, writable: true });
         fireEvent(document, new Event('fullscreenchange'));
     });
+
+    it('auto-plays when autoPlay prop is true', () => {
+        const { container } = render(<VideoPlayer src="test.mp4" title="Test Video" autoPlay={true} />);
+        expect(window.HTMLMediaElement.prototype.play).toHaveBeenCalled();
+    });
 });

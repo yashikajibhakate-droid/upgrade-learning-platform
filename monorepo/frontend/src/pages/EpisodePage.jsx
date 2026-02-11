@@ -30,6 +30,8 @@ const EpisodePage = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
+                setPlayingRefresher(false);
+                setRefresherVideoUrl(null);
                 // Fetch Series Details
                 const seriesRes = await api.get(`/api/series/${seriesId}`);
                 setSeries(seriesRes.data);
@@ -257,6 +259,8 @@ const EpisodePage = () => {
     const handleEpisodeSelect = (episode) => {
         setCurrentEpisode(episode);
         setInitialTime(0); // Reset to start when manually selecting
+        setPlayingRefresher(false);
+        setRefresherVideoUrl(null);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -304,12 +308,14 @@ const EpisodePage = () => {
                     {currentEpisode ? (
                         <>
                             <VideoPlayer
+                                key={playingRefresher ? 'refresher' : currentEpisode.id}
                                 src={playingRefresher ? refresherVideoUrl : currentEpisode.videoUrl}
                                 poster={series.thumbnailUrl}
                                 title={playingRefresher ? 'Refresher Video' : currentEpisode.title}
                                 initialTime={playingRefresher ? 0 : initialTime}
                                 onProgressUpdate={playingRefresher ? undefined : handleProgressUpdate}
                                 onEnded={playingRefresher ? handleRefresherEnded : handleEpisodeEnded}
+                                autoPlay={true}
                             />
                             <div className="bg-gray-800 p-6 rounded-2xl">
                                 <h2 className="text-2xl font-bold mb-2">{currentEpisode.title}</h2>
