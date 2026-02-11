@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Info, HelpCircle } from 'lucide-react';
 import api from '../services/api';
@@ -8,6 +8,13 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            navigate('/', { replace: true });
+        }
+    }, [navigate]);
 
     const onInfoClick = () => {
         console.log('Info/Help clicked');
