@@ -22,6 +22,8 @@ const EpisodePage = () => {
     const [completedEpisodeId, setCompletedEpisodeId] = useState(null);
     const [playingRefresher, setPlayingRefresher] = useState(false);
     const [refresherVideoUrl, setRefresherVideoUrl] = useState(null);
+    const [countdown, setCountdown] = useState(null);
+    const [isLastEpisode, setIsLastEpisode] = useState(false);
     const email = localStorage.getItem('userEmail');
     const progressSaveTimerRef = useRef(null);
     const lastProgressRef = useRef(0); // Track current progress for cleanup
@@ -32,6 +34,8 @@ const EpisodePage = () => {
                 setLoading(true);
                 setPlayingRefresher(false);
                 setRefresherVideoUrl(null);
+                setCountdown(null);
+                setIsLastEpisode(false);
                 // Fetch Series Details
                 const seriesRes = await api.get(`/api/series/${seriesId}`);
                 setSeries(seriesRes.data);
@@ -161,13 +165,51 @@ const EpisodePage = () => {
         }
     };
 
-    const proceedToNextEpisode = () => {
-        // Find and auto-play next episode
+    // Countdown Timer Effect
+    useEffect(() => {
+        let timer;
+        if (countdown !== null && countdown > 0) {
+            timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+        } else if (countdown === 0) {
+            handleCountdownComplete();
+        }
+        return () => clearTimeout(timer);
+    }, [countdown]);
+
+    const handleCountdownComplete = () => {
+        if (isLastEpisode) {
+            navigate('/');
+        } else {
+            proceedToNextEpisode(true);
+        }
+    };
+
+    const proceedToNextEpisode = (force = false) => {
+        // Find current index
         const currentIndex = episodes.findIndex(ep => ep.id === currentEpisode.id);
+
+        // If not forcing (i.e. just finished video/feedback), start countdown
+        if (!force) {
+            if (currentIndex >= 0 && currentIndex < episodes.length - 1) {
+                // Next episode exists
+                setIsLastEpisode(false);
+                setCountdown(5);
+            } else {
+                // Last episode
+                setIsLastEpisode(true);
+                setCountdown(5);
+            }
+            return;
+        }
+
+        // Actually navigate
         if (currentIndex >= 0 && currentIndex < episodes.length - 1) {
             const nextEpisode = episodes[currentIndex + 1];
             setCurrentEpisode(nextEpisode);
             setInitialTime(0); // Start from beginning
+            setCountdown(null); // Clear countdown
+            setPlayingRefresher(false);
+            setRefresherVideoUrl(null);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
@@ -261,6 +303,7 @@ const EpisodePage = () => {
         setInitialTime(0); // Reset to start when manually selecting
         setPlayingRefresher(false);
         setRefresherVideoUrl(null);
+        setCountdown(null); // Cancel any active countdown
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -317,6 +360,40 @@ const EpisodePage = () => {
                                 onEnded={playingRefresher ? handleRefresherEnded : handleEpisodeEnded}
                                 autoPlay={true}
                             />
+
+                            {/* Countdown Overlay */}
+                            {countdown !== null && (
+                                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-10 rounded-xl">
+                                    <h3 className="text-2xl font-bold text-white mb-4">
+                                        {isLastEpisode ? "Series Completed!" : "Up Next"}
+                                    </h3>
+                                    <div className="text-6xl font-bold text-indigo-500 mb-6 animate-pulse">
+                                        {countdown}
+                                    </div>
+                                    <p className="text-gray-300 mb-8 text-lg">
+                                        {isLastEpisode
+                                            ? "Redirecting to Home..."
+                                            : `Starting next episode in ${countdown} seconds`
+                                        }
+                                    </p>
+                                    <div className="flex gap-4">
+                                        <button
+                                            onClick={() => handleCountdownComplete()}
+                                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                                        >
+                                            {isLastEpisode ? <ArrowLeft size={20} /> : <PlayCircle size={20} />}
+                                            {isLastEpisode ? "Go Home Now" : "Play Now"}
+                                        </button>
+                                        <button
+                                            onClick={() => setCountdown(null)}
+                                            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="bg-gray-800 p-6 rounded-2xl">
                                 <h2 className="text-2xl font-bold mb-2">{currentEpisode.title}</h2>
                                 <p className="text-gray-400 leading-relaxed">
