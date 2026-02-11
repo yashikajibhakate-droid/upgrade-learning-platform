@@ -51,7 +51,7 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit, episodeTitle }) => {
                         <button
                             onClick={() => handleFeedback(true)}
                             disabled={isSubmitting}
-                            className="flex flex-col items-center gap-3 px-8 py-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+                            className="flex-1 flex flex-col items-center gap-3 px-4 py-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg"
                         >
                             {isSubmitting ? (
                                 <Loader className="animate-spin text-white" size={32} />
@@ -66,7 +66,7 @@ const FeedbackModal = ({ isOpen, onClose, onSubmit, episodeTitle }) => {
                         <button
                             onClick={() => handleFeedback(false)}
                             disabled={isSubmitting}
-                            className="flex flex-col items-center gap-3 px-8 py-6 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg"
+                            className="flex-1 flex flex-col items-center gap-3 px-4 py-6 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg"
                         >
                             {isSubmitting ? (
                                 <Loader className="animate-spin text-white" size={32} />

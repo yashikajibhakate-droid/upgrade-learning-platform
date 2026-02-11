@@ -171,8 +171,13 @@ public class DataSeeder implements CommandLineRunner {
 
     for (Episode episode : allEpisodes) {
       // Check if MCQ already exists for this episode
-      if (mcqRepository.findByEpisodeId(episode.getId()).isPresent()) {
-        continue; // Skip if MCQ already exists
+      java.util.Optional<MCQ> existingMcq = mcqRepository.findByEpisodeId(episode.getId());
+      if (existingMcq.isPresent()) {
+        MCQ mcq = existingMcq.get();
+        mcq.setRefresherVideoUrl(
+            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4");
+        mcqRepository.save(mcq);
+        continue;
       }
 
       // Create MCQ based on episode sequence number
@@ -211,7 +216,7 @@ public class DataSeeder implements CommandLineRunner {
       MCQ mcq = new MCQ(
           episode.getId(),
           question,
-          "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4");
+          "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4");
       mcq = mcqRepository.save(mcq);
 
       // Create and save options

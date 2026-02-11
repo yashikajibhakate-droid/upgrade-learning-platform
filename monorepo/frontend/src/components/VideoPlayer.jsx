@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipBack, SkipForward } from 'lucide-react';
 
-const VideoPlayer = ({ src, poster, onEnded, onError, title, initialTime = 0, onProgressUpdate }) => {
+const VideoPlayer = ({ src, poster, onEnded, onError, title, initialTime = 0, onProgressUpdate, autoPlay = false }) => {
     const videoRef = useRef(null);
     const containerRef = useRef(null);
     const progressUpdateTimerRef = useRef(null);
@@ -39,12 +39,30 @@ const VideoPlayer = ({ src, poster, onEnded, onError, title, initialTime = 0, on
     useEffect(() => {
         if (videoRef.current) {
             setCurrentTime(0);
-            setIsPlaying(false);
+
+            // Only reset playing state if NOT auto-playing
+            if (!autoPlay) {
+                setIsPlaying(false);
+            }
+
             setError(null);
             // Reset completion flag for new video
             videoRef.current.hasTriggeredCompletion = false;
+
+            // Handle auto-play
+            if (autoPlay) {
+                const playPromise = videoRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => setIsPlaying(true))
+                        .catch(e => {
+                            console.error("Auto-play failed:", e);
+                            setIsPlaying(false);
+                        });
+                }
+            }
         }
-    }, [src]);
+    }, [src, autoPlay]);
 
     const togglePlay = () => {
         if (videoRef.current) {
