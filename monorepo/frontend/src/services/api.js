@@ -36,8 +36,8 @@ api.interceptors.response.use(
 // Watch Progress API Methods
 export const watchProgressApi = {
     getContinueWatching: (email) => api.get('/api/watch-progress/continue', { params: { email } }),
-    saveProgress: (email, episodeId, progressSeconds) =>
-        api.post('/api/watch-progress/save', { email, episodeId, progressSeconds }),
+    saveProgress: (email, episodeId, progressSeconds, lastInteractionTimestamp) =>
+        api.post('/api/watch-progress/save', { email, episodeId, progressSeconds, lastInteractionTimestamp }),
     markComplete: (email, episodeId) =>
         api.post('/api/watch-progress/complete', { email, episodeId }),
     isCompleted: (email, episodeId) =>

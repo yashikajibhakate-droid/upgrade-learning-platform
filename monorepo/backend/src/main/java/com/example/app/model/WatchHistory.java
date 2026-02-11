@@ -27,7 +27,11 @@ public class WatchHistory {
 
   private LocalDateTime lastWatchedAt;
 
-  public WatchHistory() {}
+  @Column(name = "last_interaction_timestamp")
+  private Long lastInteractionTimestamp;
+
+  public WatchHistory() {
+  }
 
   public WatchHistory(
       String userEmail,
@@ -93,5 +97,13 @@ public class WatchHistory {
 
   public void setLastWatchedAt(LocalDateTime lastWatchedAt) {
     this.lastWatchedAt = lastWatchedAt;
+  }
+
+  public Long getLastInteractionTimestamp() {
+    return lastInteractionTimestamp;
+  }
+
+  public void setLastInteractionTimestamp(Long lastInteractionTimestamp) {
+    this.lastInteractionTimestamp = lastInteractionTimestamp;
   }
 }

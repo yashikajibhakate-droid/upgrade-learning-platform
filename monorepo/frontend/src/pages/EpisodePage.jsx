@@ -27,6 +27,25 @@ const EpisodePage = () => {
     const email = localStorage.getItem('userEmail');
     const progressSaveTimerRef = useRef(null);
     const lastProgressRef = useRef(0); // Track current progress for cleanup
+    const lastInteractionTimeRef = useRef(Date.now());
+    const lastSaveTimeRef = useRef(0);
+
+    // Update interaction time on visibility change or focus
+    useEffect(() => {
+        const updateInteractionTime = () => {
+            if (document.visibilityState === 'visible') {
+                lastInteractionTimeRef.current = Date.now();
+            }
+        };
+
+        document.addEventListener('visibilitychange', updateInteractionTime);
+        window.addEventListener('focus', updateInteractionTime);
+
+        return () => {
+            document.removeEventListener('visibilitychange', updateInteractionTime);
+            window.removeEventListener('focus', updateInteractionTime);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -112,7 +131,10 @@ const EpisodePage = () => {
 
             // Save final progress when unmounting
             if (email && currentEpisode && lastProgressRef.current > 0) {
-                watchProgressApi.saveProgress(email, currentEpisode.id, Math.floor(lastProgressRef.current))
+                // Should we update interaction time here? Maybe not, to avoid reviving a stale session?
+                // But if they are closing the tab, it was likely active.
+                // Let's use the current value of the ref.
+                watchProgressApi.saveProgress(email, currentEpisode.id, Math.floor(lastProgressRef.current), lastInteractionTimeRef.current)
                     .catch(err => console.error('Failed to save final progress:', err));
             }
         };
@@ -124,15 +146,18 @@ const EpisodePage = () => {
         // Store current progress for cleanup
         lastProgressRef.current = currentTime;
 
-        // Debounce the save - only save every 3 seconds
-        if (progressSaveTimerRef.current) {
-            clearTimeout(progressSaveTimerRef.current);
+        // Update interaction timestamp if visible
+        if (document.visibilityState === 'visible') {
+            lastInteractionTimeRef.current = Date.now();
         }
 
-        progressSaveTimerRef.current = setTimeout(() => {
-            watchProgressApi.saveProgress(email, currentEpisode.id, Math.floor(currentTime))
+        // Throttle the save - save periodically (e.g., every 5 seconds)
+        const now = Date.now();
+        if (now - lastSaveTimeRef.current > 5000) {
+            lastSaveTimeRef.current = now;
+            watchProgressApi.saveProgress(email, currentEpisode.id, Math.floor(currentTime), lastInteractionTimeRef.current)
                 .catch(err => console.error('Failed to save progress:', err));
-        }, 3000); // Reduced from 5s to 3s for faster updates
+        }
     };
 
     const handleEpisodeEnded = async () => {

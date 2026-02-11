@@ -59,9 +59,14 @@ public class WatchProgressService {
     return Optional.of(response);
   }
 
-  public void saveProgress(String userEmail, UUID episodeId, Integer progressSeconds) {
+  public void saveProgress(String userEmail, UUID episodeId, Integer progressSeconds, Long lastInteractionTimestamp) {
     if (progressSeconds == null) {
       progressSeconds = 0;
+    }
+
+    // Default to current time if not provided (backward compatibility)
+    if (lastInteractionTimestamp == null) {
+      lastInteractionTimestamp = System.currentTimeMillis();
     }
 
     Optional<WatchHistory> existing = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
@@ -76,13 +81,23 @@ public class WatchProgressService {
 
     if (existing.isPresent()) {
       WatchHistory watchHistory = existing.get();
+
+      // Check for stale update (concurrent sessions)
+      // If the incoming timestamp is older than what we have, ignore it.
+      if (watchHistory.getLastInteractionTimestamp() != null &&
+          lastInteractionTimestamp < watchHistory.getLastInteractionTimestamp()) {
+        return; // Stale update, ignore
+      }
+
       watchHistory.setProgressSeconds(clampedProgress);
       watchHistory.setLastWatchedAt(LocalDateTime.now());
+      watchHistory.setLastInteractionTimestamp(lastInteractionTimestamp);
       watchHistoryRepository.save(watchHistory);
     } else {
       WatchHistory watchHistory = new WatchHistory(
           userEmail, episode.getSeries().getId(), episodeId, clampedProgress, false);
       watchHistory.setLastWatchedAt(LocalDateTime.now());
+      watchHistory.setLastInteractionTimestamp(lastInteractionTimestamp);
       watchHistoryRepository.save(watchHistory);
     }
   }
