@@ -27,9 +27,6 @@ public class WatchHistory {
 
   private LocalDateTime lastWatchedAt;
 
-  @Column(name = "last_interaction_timestamp")
-  private Long lastInteractionTimestamp;
-
   public WatchHistory() {
   }
 
@@ -97,13 +94,5 @@ public class WatchHistory {
 
   public void setLastWatchedAt(LocalDateTime lastWatchedAt) {
     this.lastWatchedAt = lastWatchedAt;
-  }
-
-  public Long getLastInteractionTimestamp() {
-    return lastInteractionTimestamp;
-  }
-
-  public void setLastInteractionTimestamp(Long lastInteractionTimestamp) {
-    this.lastInteractionTimestamp = lastInteractionTimestamp;
   }
 }

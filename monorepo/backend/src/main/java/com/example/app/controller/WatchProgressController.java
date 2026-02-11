@@ -42,8 +42,7 @@ public class WatchProgressController {
   public ResponseEntity<Map<String, String>> saveProgress(
       @RequestBody SaveProgressRequest request) {
     watchProgressService.saveProgress(
-        request.getEmail(), request.getEpisodeId(), request.getProgressSeconds(),
-        request.getLastInteractionTimestamp());
+        request.getEmail(), request.getEpisodeId(), request.getProgressSeconds());
     return ResponseEntity.ok(Map.of("message", "Progress saved successfully"));
   }
 
@@ -65,7 +64,6 @@ public class WatchProgressController {
     private String email;
     private UUID episodeId;
     private Integer progressSeconds;
-    private Long lastInteractionTimestamp;
 
     public String getEmail() {
       return email;
@@ -89,14 +87,6 @@ public class WatchProgressController {
 
     public void setProgressSeconds(Integer progressSeconds) {
       this.progressSeconds = progressSeconds;
-    }
-
-    public Long getLastInteractionTimestamp() {
-      return lastInteractionTimestamp;
-    }
-
-    public void setLastInteractionTimestamp(Long lastInteractionTimestamp) {
-      this.lastInteractionTimestamp = lastInteractionTimestamp;
     }
   }
 

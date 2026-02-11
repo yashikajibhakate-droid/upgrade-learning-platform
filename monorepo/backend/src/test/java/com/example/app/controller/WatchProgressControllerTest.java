@@ -88,7 +88,7 @@ class WatchProgressControllerTest {
     request.put("episodeId", UUID.randomUUID().toString());
     request.put("progressSeconds", 120);
 
-    doNothing().when(watchProgressService).saveProgress(anyString(), any(UUID.class), anyInt(), any());
+    doNothing().when(watchProgressService).saveProgress(anyString(), any(UUID.class), anyInt());
 
     mockMvc
         .perform(

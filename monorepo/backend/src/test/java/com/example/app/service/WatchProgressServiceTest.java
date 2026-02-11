@@ -77,7 +77,6 @@ class WatchProgressServiceTest {
     String email = "test@example.com";
     UUID episodeId = UUID.randomUUID();
     Integer progressSeconds = 120;
-    Long timestamp = System.currentTimeMillis();
 
     Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
     Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
@@ -86,7 +85,7 @@ class WatchProgressServiceTest {
         .thenReturn(Optional.empty());
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
-    watchProgressService.saveProgress(email, episodeId, progressSeconds, timestamp);
+    watchProgressService.saveProgress(email, episodeId, progressSeconds);
 
     verify(watchHistoryRepository, times(1)).save(any(WatchHistory.class));
   }
@@ -97,50 +96,19 @@ class WatchProgressServiceTest {
     UUID episodeId = UUID.randomUUID();
     UUID seriesId = UUID.randomUUID();
     Integer progressSeconds = 240;
-    Long oldTimestamp = 1000L;
-    Long newTimestamp = 2000L;
 
     Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
     Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
     WatchHistory existingHistory = new WatchHistory(email, seriesId, episodeId, 120, false);
-    existingHistory.setLastInteractionTimestamp(oldTimestamp);
 
     when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
         .thenReturn(Optional.of(existingHistory));
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
-    watchProgressService.saveProgress(email, episodeId, progressSeconds, newTimestamp);
+    watchProgressService.saveProgress(email, episodeId, progressSeconds);
 
     assertEquals(240, existingHistory.getProgressSeconds());
-    assertEquals(newTimestamp, existingHistory.getLastInteractionTimestamp());
     verify(watchHistoryRepository, times(1)).save(existingHistory);
-  }
-
-  @Test
-  void testSaveProgress_StaleTimestamp_Ignored() {
-    String email = "test@example.com";
-    UUID episodeId = UUID.randomUUID();
-    UUID seriesId = UUID.randomUUID();
-    Integer progressSeconds = 240;
-    Long existingTimestamp = 2000L;
-    Long staleTimestamp = 1000L;
-
-    Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
-    Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
-    WatchHistory existingHistory = new WatchHistory(email, seriesId, episodeId, 120, false);
-    existingHistory.setLastInteractionTimestamp(existingTimestamp);
-
-    when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
-        .thenReturn(Optional.of(existingHistory));
-    when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
-
-    watchProgressService.saveProgress(email, episodeId, progressSeconds, staleTimestamp);
-
-    // Should NOT update progress or timestamp
-    assertEquals(120, existingHistory.getProgressSeconds());
-    assertEquals(existingTimestamp, existingHistory.getLastInteractionTimestamp());
-    // Should NOT call save
-    verify(watchHistoryRepository, times(0)).save(any());
   }
 
   @Test
@@ -181,7 +149,6 @@ class WatchProgressServiceTest {
   void testSaveProgress_NullProgress_DefaultsToZero() {
     String email = "test@example.com";
     UUID episodeId = UUID.randomUUID();
-    Long timestamp = System.currentTimeMillis();
 
     Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
     Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
@@ -190,7 +157,7 @@ class WatchProgressServiceTest {
         .thenReturn(Optional.empty());
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
-    watchProgressService.saveProgress(email, episodeId, null, timestamp);
+    watchProgressService.saveProgress(email, episodeId, null);
 
     verify(watchHistoryRepository, times(1)).save(argThat(history -> history.getProgressSeconds() == 0));
   }
@@ -199,12 +166,10 @@ class WatchProgressServiceTest {
   void testSaveProgress_EpisodeNotFound_ThrowsException() {
     String email = "test@example.com";
     UUID episodeId = UUID.randomUUID();
-    Long timestamp = System.currentTimeMillis();
 
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.empty());
 
-    assertThrows(ResourceNotFoundException.class,
-        () -> watchProgressService.saveProgress(email, episodeId, 120, timestamp));
+    assertThrows(ResourceNotFoundException.class, () -> watchProgressService.saveProgress(email, episodeId, 120));
   }
 
   @Test
@@ -217,5 +182,32 @@ class WatchProgressServiceTest {
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.empty());
 
     assertThrows(ResourceNotFoundException.class, () -> watchProgressService.markCompleted(email, episodeId));
+  }
+
+  @Test
+  void testSaveProgress_ConcurrentInterleavedUpdates() {
+    String email = "test@example.com";
+    UUID episodeId = UUID.randomUUID();
+    UUID seriesId = UUID.randomUUID();
+
+    Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
+    Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
+
+    WatchHistory initialHistory = new WatchHistory(email, seriesId, episodeId, 100, false);
+
+    when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
+        .thenReturn(Optional.of(initialHistory));
+    when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
+
+    // Simulate Session A updating progress
+    watchProgressService.saveProgress(email, episodeId, 110);
+    assertEquals(110, initialHistory.getProgressSeconds());
+    verify(watchHistoryRepository, times(1)).save(initialHistory);
+
+    // Simulate Session B updating progress (even if "older" time-wise, distinct
+    // request wins)
+    watchProgressService.saveProgress(email, episodeId, 105);
+    assertEquals(105, initialHistory.getProgressSeconds());
+    verify(watchHistoryRepository, times(2)).save(initialHistory);
   }
 }
