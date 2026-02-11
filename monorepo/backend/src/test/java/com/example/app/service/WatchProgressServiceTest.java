@@ -183,4 +183,31 @@ class WatchProgressServiceTest {
 
     assertThrows(ResourceNotFoundException.class, () -> watchProgressService.markCompleted(email, episodeId));
   }
+
+  @Test
+  void testSaveProgress_ConcurrentInterleavedUpdates() {
+    String email = "test@example.com";
+    UUID episodeId = UUID.randomUUID();
+    UUID seriesId = UUID.randomUUID();
+
+    Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
+    Episode episode = new Episode(series, "Episode 1", "video.mp4", 600, 1);
+
+    WatchHistory initialHistory = new WatchHistory(email, seriesId, episodeId, 100, false);
+
+    when(watchHistoryRepository.findByUserEmailAndEpisodeId(email, episodeId))
+        .thenReturn(Optional.of(initialHistory));
+    when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
+
+    // Simulate Session A updating progress
+    watchProgressService.saveProgress(email, episodeId, 110);
+    assertEquals(110, initialHistory.getProgressSeconds());
+    verify(watchHistoryRepository, times(1)).save(initialHistory);
+
+    // Simulate Session B updating progress (even if "older" time-wise, distinct
+    // request wins)
+    watchProgressService.saveProgress(email, episodeId, 105);
+    assertEquals(105, initialHistory.getProgressSeconds());
+    verify(watchHistoryRepository, times(2)).save(initialHistory);
+  }
 }

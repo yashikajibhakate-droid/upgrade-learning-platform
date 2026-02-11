@@ -27,7 +27,8 @@ public class WatchHistory {
 
   private LocalDateTime lastWatchedAt;
 
-  public WatchHistory() {}
+  public WatchHistory() {
+  }
 
   public WatchHistory(
       String userEmail,

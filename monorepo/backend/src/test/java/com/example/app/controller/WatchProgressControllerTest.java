@@ -23,16 +23,21 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(WatchProgressController.class)
 class WatchProgressControllerTest {
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-  @MockBean private WatchProgressService watchProgressService;
+  @MockBean
+  private WatchProgressService watchProgressService;
 
   // Mocking dependencies required by WebConfig/AuthInterceptor
-  @MockBean private com.example.app.service.UserService userService;
+  @MockBean
+  private com.example.app.service.UserService userService;
 
-  @MockBean private com.example.app.config.AuthInterceptor authInterceptor;
+  @MockBean
+  private com.example.app.config.AuthInterceptor authInterceptor;
 
-  @Autowired private ObjectMapper objectMapper;
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @BeforeEach
   void setUp() throws Exception {
@@ -42,19 +47,18 @@ class WatchProgressControllerTest {
   @Test
   void testGetContinueWatching_WithData_Returns200() throws Exception {
     String email = "test@example.com";
-    ContinueWatchingResponse response =
-        new ContinueWatchingResponse(
-            UUID.randomUUID(),
-            "Test Series",
-            "thumb.jpg",
-            "Tech",
-            UUID.randomUUID(),
-            "Episode 1",
-            1,
-            600,
-            "video.mp4",
-            120,
-            LocalDateTime.now());
+    ContinueWatchingResponse response = new ContinueWatchingResponse(
+        UUID.randomUUID(),
+        "Test Series",
+        "thumb.jpg",
+        "Tech",
+        UUID.randomUUID(),
+        "Episode 1",
+        1,
+        600,
+        "video.mp4",
+        120,
+        LocalDateTime.now());
 
     when(watchProgressService.getContinueWatching(email)).thenReturn(Optional.of(response));
 
