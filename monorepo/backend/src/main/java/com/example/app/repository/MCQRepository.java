@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface MCQRepository extends JpaRepository<MCQ, UUID> {
-    Optional<MCQ> findByEpisodeId(UUID episodeId);
+  Optional<MCQ> findByEpisodeId(UUID episodeId);
 }

@@ -25,78 +25,78 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(IngestionController.class)
 public class IngestionControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-    @MockBean
-    private IngestionService ingestionService;
+  @MockBean private IngestionService ingestionService;
 
-    @MockBean
-    private com.example.app.service.AuthService authService;
+  @MockBean private com.example.app.service.AuthService authService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+  @Autowired private ObjectMapper objectMapper;
 
-    private IngestRequest ingestRequest;
+  private IngestRequest ingestRequest;
 
-    @BeforeEach
-    void setUp() {
-        ingestRequest = new IngestRequest();
-        ingestRequest.setSeriesTitle("Test Series");
-        ingestRequest.setSeriesDescription("Description");
-        ingestRequest.setSeriesCategory("Category");
-        // Thumbnail URL is optional in logic but DTO validation?
-        // Let's check DTO. IngestRequest has @NotBlank on seriesTitle, seriesCategory.
+  @BeforeEach
+  void setUp() {
+    ingestRequest = new IngestRequest();
+    ingestRequest.setSeriesTitle("Test Series");
+    ingestRequest.setSeriesDescription("Description");
+    ingestRequest.setSeriesCategory("Category");
+    // Thumbnail URL is optional in logic but DTO validation?
+    // Let's check DTO. IngestRequest has @NotBlank on seriesTitle, seriesCategory.
 
-        IngestEpisodeRequest episodeRequest = new IngestEpisodeRequest();
-        episodeRequest.setTitle("Test Episode");
-        episodeRequest.setVideoUrl("http://video.url");
-        episodeRequest.setDurationSeconds(60);
-        episodeRequest.setSequenceNumber(1);
+    IngestEpisodeRequest episodeRequest = new IngestEpisodeRequest();
+    episodeRequest.setTitle("Test Episode");
+    episodeRequest.setVideoUrl("http://video.url");
+    episodeRequest.setDurationSeconds(60);
+    episodeRequest.setSequenceNumber(1);
 
-        IngestMCQRequest mcqRequest = new IngestMCQRequest();
-        mcqRequest.setQuestion("Test Question");
+    IngestMCQRequest mcqRequest = new IngestMCQRequest();
+    mcqRequest.setQuestion("Test Question");
 
-        List<IngestMCQOptionRequest> options = new ArrayList<>();
-        IngestMCQOptionRequest option = new IngestMCQOptionRequest();
-        option.setOptionText("Option 1");
-        option.setIsCorrect(true);
-        option.setSequenceNumber(1);
-        options.add(option);
-        mcqRequest.setOptions(options);
+    List<IngestMCQOptionRequest> options = new ArrayList<>();
+    IngestMCQOptionRequest option = new IngestMCQOptionRequest();
+    option.setOptionText("Option 1");
+    option.setIsCorrect(true);
+    option.setSequenceNumber(1);
+    options.add(option);
+    mcqRequest.setOptions(options);
 
-        episodeRequest.setMcq(mcqRequest);
-        ingestRequest.setEpisodes(List.of(episodeRequest));
-    }
+    episodeRequest.setMcq(mcqRequest);
+    ingestRequest.setEpisodes(List.of(episodeRequest));
+  }
 
-    @Test
-    void testIngestContentSuccess() throws Exception {
-        com.example.app.model.User user = new com.example.app.model.User("test@example.com");
-        com.example.app.model.Session session = new com.example.app.model.Session(user, "hash");
+  @Test
+  void testIngestContentSuccess() throws Exception {
+    com.example.app.model.User user = new com.example.app.model.User("test@example.com");
+    com.example.app.model.Session session = new com.example.app.model.Session(user, "hash");
 
-        doNothing().when(ingestionService).ingestContent(any(IngestRequest.class));
-        when(authService.getSession("test-token")).thenReturn(java.util.Optional.of(session));
+    doNothing().when(ingestionService).ingestContent(any(IngestRequest.class));
+    when(authService.getSession("test-token")).thenReturn(java.util.Optional.of(session));
 
-        mockMvc.perform(post("/api/ingest")
+    mockMvc
+        .perform(
+            post("/api/ingest")
                 .header("Authorization", "Bearer test-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(ingestRequest)))
-                .andExpect(status().isCreated());
-    }
+        .andExpect(status().isCreated());
+  }
 
-    @Test
-    void testIngestContentBadRequest() throws Exception {
-        com.example.app.model.User user = new com.example.app.model.User("test@example.com");
-        com.example.app.model.Session session = new com.example.app.model.Session(user, "hash");
+  @Test
+  void testIngestContentBadRequest() throws Exception {
+    com.example.app.model.User user = new com.example.app.model.User("test@example.com");
+    com.example.app.model.Session session = new com.example.app.model.Session(user, "hash");
 
-        when(authService.getSession("test-token")).thenReturn(java.util.Optional.of(session));
+    when(authService.getSession("test-token")).thenReturn(java.util.Optional.of(session));
 
-        ingestRequest.setSeriesTitle(null); // Invalid request
+    ingestRequest.setSeriesTitle(null); // Invalid request
 
-        mockMvc.perform(post("/api/ingest")
+    mockMvc
+        .perform(
+            post("/api/ingest")
                 .header("Authorization", "Bearer test-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(ingestRequest)))
-                .andExpect(status().isBadRequest());
-    }
+        .andExpect(status().isBadRequest());
+  }
 }

@@ -17,4 +17,6 @@ public interface WatchHistoryRepository extends JpaRepository<WatchHistory, UUID
       String userEmail);
 
   Optional<WatchHistory> findByUserEmailAndEpisodeId(String userEmail, UUID episodeId);
+
+  List<WatchHistory> findByUserEmailAndSeriesId(String userEmail, UUID seriesId);
 }

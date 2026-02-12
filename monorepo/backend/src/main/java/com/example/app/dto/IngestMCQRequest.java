@@ -7,36 +7,36 @@ import java.util.List;
 
 public class IngestMCQRequest {
 
-    @NotBlank(message = "Question is required")
-    private String question;
+  @NotBlank(message = "Question is required")
+  private String question;
 
-    private String refresherVideoUrl;
+  private String refresherVideoUrl;
 
-    @Valid
-    @NotEmpty(message = "Options are required")
-    private List<IngestMCQOptionRequest> options;
+  @Valid
+  @NotEmpty(message = "Options are required")
+  private List<IngestMCQOptionRequest> options;
 
-    public String getQuestion() {
-        return question;
-    }
+  public String getQuestion() {
+    return question;
+  }
 
-    public void setQuestion(String question) {
-        this.question = question;
-    }
+  public void setQuestion(String question) {
+    this.question = question;
+  }
 
-    public String getRefresherVideoUrl() {
-        return refresherVideoUrl;
-    }
+  public String getRefresherVideoUrl() {
+    return refresherVideoUrl;
+  }
 
-    public void setRefresherVideoUrl(String refresherVideoUrl) {
-        this.refresherVideoUrl = refresherVideoUrl;
-    }
+  public void setRefresherVideoUrl(String refresherVideoUrl) {
+    this.refresherVideoUrl = refresherVideoUrl;
+  }
 
-    public List<IngestMCQOptionRequest> getOptions() {
-        return options;
-    }
+  public List<IngestMCQOptionRequest> getOptions() {
+    return options;
+  }
 
-    public void setOptions(List<IngestMCQOptionRequest> options) {
-        this.options = options;
-    }
+  public void setOptions(List<IngestMCQOptionRequest> options) {
+    this.options = options;
+  }
 }

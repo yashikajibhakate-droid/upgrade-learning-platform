@@ -22,17 +22,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SeriesServiceTest {
 
-  @Mock
-  private UserRepository userRepository;
-  @Mock
-  private SeriesRepository seriesRepository;
-  @Mock
-  private WatchHistoryRepository watchHistoryRepository;
-  @Mock
-  private EpisodeRepository episodeRepository;
+  @Mock private UserRepository userRepository;
+  @Mock private SeriesRepository seriesRepository;
+  @Mock private WatchHistoryRepository watchHistoryRepository;
+  @Mock private EpisodeRepository episodeRepository;
 
-  @InjectMocks
-  private SeriesService seriesService;
+  @InjectMocks private SeriesService seriesService;
 
   @Test
   void testGetRecommendations_Success() {

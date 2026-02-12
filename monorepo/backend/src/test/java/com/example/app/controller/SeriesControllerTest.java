@@ -21,13 +21,19 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(SeriesController.class)
 class SeriesControllerTest {
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired
+  private MockMvc mockMvc;
 
-  @MockBean private SeriesService seriesService;
+  @MockBean
+  private SeriesService seriesService;
+  @MockBean
+  private com.example.app.service.SeriesReviewService seriesReviewService;
 
   // Mocking dependencies required by WebConfig/AuthInterceptor
-  @MockBean private com.example.app.service.UserService userService;
-  @MockBean private com.example.app.config.AuthInterceptor authInterceptor;
+  @MockBean
+  private com.example.app.service.UserService userService;
+  @MockBean
+  private com.example.app.config.AuthInterceptor authInterceptor;
 
   @BeforeEach
   void setUp() throws Exception {
@@ -51,7 +57,7 @@ class SeriesControllerTest {
                 .value("Test Episode"))
         .andExpect(
             org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
-                    "$[0].sequenceNumber")
+                "$[0].sequenceNumber")
                 .value(1));
   }
 

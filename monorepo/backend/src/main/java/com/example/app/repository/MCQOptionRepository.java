@@ -11,6 +11,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MCQOptionRepository extends JpaRepository<MCQOption, UUID> {
 
-    @Query("SELECT o FROM MCQOption o WHERE o.mcq.id = :mcqId ORDER BY o.sequenceNumber ASC")
-    List<MCQOption> findByMcqId(@Param("mcqId") UUID mcqId);
+  @Query("SELECT o FROM MCQOption o WHERE o.mcq.id = :mcqId ORDER BY o.sequenceNumber ASC")
+  List<MCQOption> findByMcqId(@Param("mcqId") UUID mcqId);
 }

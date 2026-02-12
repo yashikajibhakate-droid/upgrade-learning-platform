@@ -8,6 +8,7 @@ import com.example.app.model.WatchHistory;
 import com.example.app.repository.EpisodeRepository;
 import com.example.app.repository.WatchHistoryRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -68,8 +69,10 @@ public class WatchProgressService {
     Optional<WatchHistory> existing = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
 
     // Fetch episode to get duration for clamping
-    Episode episode = episodeRepository.findById(episodeId)
-        .orElseThrow(() -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
+    Episode episode = episodeRepository
+        .findById(episodeId)
+        .orElseThrow(
+            () -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
 
     // Clamp progress to duration
     int duration = episode.getDurationSeconds();
@@ -97,11 +100,12 @@ public class WatchProgressService {
       watchHistory.setLastWatchedAt(LocalDateTime.now());
       watchHistoryRepository.save(watchHistory);
     } else {
-      Episode episode = episodeRepository.findById(episodeId)
-          .orElseThrow(() -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
+      Episode episode = episodeRepository
+          .findById(episodeId)
+          .orElseThrow(
+              () -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
 
-      WatchHistory watchHistory = new WatchHistory(userEmail, episode.getSeries().getId(), episodeId, null,
-          true);
+      WatchHistory watchHistory = new WatchHistory(userEmail, episode.getSeries().getId(), episodeId, null, true);
       watchHistory.setLastWatchedAt(LocalDateTime.now());
       watchHistoryRepository.save(watchHistory);
     }
@@ -110,5 +114,30 @@ public class WatchProgressService {
   public boolean isEpisodeCompleted(String userEmail, UUID episodeId) {
     Optional<WatchHistory> history = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
     return history.isPresent() && history.get().isCompleted();
+  }
+
+  public double calculateSeriesProgress(String userEmail, UUID seriesId) {
+    List<Episode> episodes = episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(seriesId);
+    if (episodes.isEmpty()) {
+      return 0.0;
+    }
+
+    List<WatchHistory> history = watchHistoryRepository.findByUserEmailAndSeriesId(userEmail, seriesId);
+
+    long completedCount = history.stream().filter(WatchHistory::isCompleted).count();
+
+    // Also consider progress in the current incomplete episode
+    double partialProgress = 0.0;
+    for (WatchHistory h : history) {
+      if (!h.isCompleted() && h.getProgressSeconds() != null) {
+        Optional<Episode> ep = episodes.stream().filter(e -> e.getId().equals(h.getEpisodeId())).findFirst();
+        if (ep.isPresent() && ep.get().getDurationSeconds() > 0) {
+          partialProgress = (double) h.getProgressSeconds() / ep.get().getDurationSeconds();
+          break; // Stop after first relevant incomplete episode
+        }
+      }
+    }
+
+    return (completedCount + partialProgress) / episodes.size() * 100.0;
   }
 }

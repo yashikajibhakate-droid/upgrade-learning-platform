@@ -14,17 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthService {
 
-  @Autowired
-  private UserRepository userRepository;
+  @Autowired private UserRepository userRepository;
 
-  @Autowired
-  private OtpRepository otpRepository;
+  @Autowired private OtpRepository otpRepository;
 
-  @Autowired
-  private com.example.app.repository.SessionRepository sessionRepository;
+  @Autowired private com.example.app.repository.SessionRepository sessionRepository;
 
-  @Autowired
-  private EmailService emailService;
+  @Autowired private EmailService emailService;
 
   public void generateAndSendOtp(String email) {
     // Generate 6-digit OTP
@@ -103,7 +99,8 @@ public class AuthService {
 
     // 3. Return combined token: Base64(id + ":" + rawToken)
     String combined = otp.getId() + ":" + rawToken;
-    return java.util.Base64.getEncoder().encodeToString(combined.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    return java.util.Base64.getEncoder()
+        .encodeToString(combined.getBytes(java.nio.charset.StandardCharsets.UTF_8));
   }
 
   @Transactional
@@ -113,16 +110,14 @@ public class AuthService {
       byte[] decodedBytes = java.util.Base64.getDecoder().decode(combinedToken);
       String decoded = new String(decodedBytes, java.nio.charset.StandardCharsets.UTF_8);
       String[] parts = decoded.split(":");
-      if (parts.length != 2)
-        return Optional.empty();
+      if (parts.length != 2) return Optional.empty();
 
       java.util.UUID id = java.util.UUID.fromString(parts[0]);
       String rawToken = parts[1];
 
       // 2. Find OTP record
       Optional<Otp> otpOpt = otpRepository.findById(id);
-      if (otpOpt.isEmpty())
-        return Optional.empty();
+      if (otpOpt.isEmpty()) return Optional.empty();
 
       Otp otp = otpOpt.get();
 

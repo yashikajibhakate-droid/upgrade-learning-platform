@@ -14,11 +14,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  @Autowired
-  private AuthService authService;
+  @Autowired private AuthService authService;
 
-  @Autowired
-  private RateLimitingService rateLimitingService;
+  @Autowired private RateLimitingService rateLimitingService;
 
   @PostMapping("/generate-otp")
   public ResponseEntity<?> generateOtp(@RequestBody Map<String, String> payload) {
@@ -92,9 +90,12 @@ public class AuthController {
     Optional<com.example.app.model.Session> session = authService.getSession(token);
     if (session.isPresent()) {
       User user = session.get().getUser();
-      return ResponseEntity.ok(Map.of(
-          "email", user.getEmail(),
-          "hasInterests", user.getInterests() != null && !user.getInterests().isEmpty()));
+      return ResponseEntity.ok(
+          Map.of(
+              "email",
+              user.getEmail(),
+              "hasInterests",
+              user.getInterests() != null && !user.getInterests().isEmpty()));
     }
     return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
   }
@@ -115,11 +116,16 @@ public class AuthController {
         if (session.isPresent()) {
           User user = session.get().getUser();
           boolean hasInterests = user.getInterests() != null && !user.getInterests().isEmpty();
-          return ResponseEntity.ok(Map.of(
-              "message", "Login successful",
-              "email", user.getEmail(),
-              "token", authToken,
-              "hasInterests", hasInterests));
+          return ResponseEntity.ok(
+              Map.of(
+                  "message",
+                  "Login successful",
+                  "email",
+                  user.getEmail(),
+                  "token",
+                  authToken,
+                  "hasInterests",
+                  hasInterests));
         }
       }
       return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired token"));

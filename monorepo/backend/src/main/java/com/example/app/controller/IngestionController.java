@@ -14,15 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/ingest")
 public class IngestionController {
 
-    private final IngestionService ingestionService;
+  private final IngestionService ingestionService;
 
-    public IngestionController(IngestionService ingestionService) {
-        this.ingestionService = ingestionService;
-    }
+  public IngestionController(IngestionService ingestionService) {
+    this.ingestionService = ingestionService;
+  }
 
-    @PostMapping
-    public ResponseEntity<Void> ingestContent(@Valid @RequestBody IngestRequest request) {
-        ingestionService.ingestContent(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
+  @PostMapping
+  public ResponseEntity<Void> ingestContent(@Valid @RequestBody IngestRequest request) {
+    ingestionService.ingestContent(request);
+    return ResponseEntity.status(HttpStatus.CREATED).build();
+  }
 }

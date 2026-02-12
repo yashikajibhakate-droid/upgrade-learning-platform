@@ -2,7 +2,6 @@ package com.example.app.config;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,13 +18,17 @@ import org.mockito.MockitoAnnotations;
 
 class AuthInterceptorTest {
 
-  @Mock private com.example.app.service.AuthService authService;
+  @Mock
+  private com.example.app.service.AuthService authService;
 
-  @Mock private HttpServletRequest request;
+  @Mock
+  private HttpServletRequest request;
 
-  @Mock private HttpServletResponse response;
+  @Mock
+  private HttpServletResponse response;
 
-  @InjectMocks private AuthInterceptor authInterceptor;
+  @InjectMocks
+  private AuthInterceptor authInterceptor;
 
   @BeforeEach
   void setUp() {
@@ -33,8 +36,10 @@ class AuthInterceptorTest {
   }
 
   @Test
-  void preHandle_OptionsRequest_ShouldAllow() throws Exception {
-    when(request.getMethod()).thenReturn("OPTIONS");
+  void preHandle_PublicPathSeries_NoToken_ShouldAllow() throws Exception {
+    when(request.getMethod()).thenReturn("GET");
+    when(request.getRequestURI()).thenReturn("/api/series/some-uuid");
+    when(request.getParameter("email")).thenReturn(null);
 
     boolean result = authInterceptor.preHandle(request, response, new Object());
 
@@ -42,9 +47,10 @@ class AuthInterceptorTest {
   }
 
   @Test
-  void preHandle_ProtectedPath_NoToken_ShouldFail() throws Exception {
+  void preHandle_PublicPathSeries_WithEmail_ShouldRequireAuth() throws Exception {
     when(request.getMethod()).thenReturn("GET");
-    when(request.getRequestURI()).thenReturn("/api/series");
+    when(request.getRequestURI()).thenReturn("/api/series/some-uuid");
+    when(request.getParameter("email")).thenReturn("test@example.com");
     when(request.getHeader("Authorization")).thenReturn(null);
 
     boolean result = authInterceptor.preHandle(request, response, new Object());
@@ -54,11 +60,11 @@ class AuthInterceptorTest {
   }
 
   @Test
-  void preHandle_ProtectedPath_InvalidToken_ShouldFail() throws Exception {
+  void preHandle_NonPublicPath_NoToken_ShouldRequireAuth() throws Exception {
     when(request.getMethod()).thenReturn("GET");
-    when(request.getRequestURI()).thenReturn("/api/series");
-    when(request.getHeader("Authorization")).thenReturn("Bearer invalid-token");
-    when(authService.getSession(anyString())).thenReturn(Optional.empty());
+    when(request.getRequestURI()).thenReturn("/api/watch-history");
+    when(request.getParameter("email")).thenReturn(null);
+    when(request.getHeader("Authorization")).thenReturn(null);
 
     boolean result = authInterceptor.preHandle(request, response, new Object());
 
@@ -67,13 +73,37 @@ class AuthInterceptorTest {
   }
 
   @Test
-  void preHandle_ProtectedPath_ValidToken_ShouldAllow() throws Exception {
+  void preHandle_SeriesPost_NoToken_ShouldRequireAuth() throws Exception {
+    when(request.getMethod()).thenReturn("POST");
+    when(request.getRequestURI()).thenReturn("/api/series/some-uuid/reviews");
+    when(request.getParameter("email")).thenReturn(null);
+    when(request.getHeader("Authorization")).thenReturn(null);
+
+    boolean result = authInterceptor.preHandle(request, response, new Object());
+
+    assertFalse(result);
+    verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+  }
+
+  @Test
+  void preHandle_PublicPathUsersInterests_ShouldAllow() throws Exception {
     when(request.getMethod()).thenReturn("GET");
-    when(request.getRequestURI()).thenReturn("/api/series");
+    when(request.getRequestURI()).thenReturn("/api/users/interests");
+    when(request.getParameter("email")).thenReturn(null);
+
+    boolean result = authInterceptor.preHandle(request, response, new Object());
+
+    assertTrue(result);
+  }
+
+  @Test
+  void preHandle_ProtectedPath_ValidToken_ShouldAllow() throws Exception {
+    when(request.getMethod()).thenReturn("POST");
+    when(request.getRequestURI()).thenReturn("/api/series/some-uuid/reviews");
+    when(request.getParameter("email")).thenReturn(null);
     when(request.getHeader("Authorization")).thenReturn("Bearer valid-token");
 
     User user = new User("test@example.com");
-    // We use a dummy hash since we are mocking authService anyway
     Session session = new Session(user, "dummy-hash");
 
     when(authService.getSession("valid-token")).thenReturn(Optional.of(session));

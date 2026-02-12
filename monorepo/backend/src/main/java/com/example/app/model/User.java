@@ -29,8 +29,7 @@ public class User {
   @Column(name = "weight")
   private java.util.Map<String, Integer> interestWeights = new java.util.HashMap<>();
 
-  public User() {
-  }
+  public User() {}
 
   public User(String email) {
     this.email = email;

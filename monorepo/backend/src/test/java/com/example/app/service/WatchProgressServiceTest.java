@@ -159,7 +159,8 @@ class WatchProgressServiceTest {
 
     watchProgressService.saveProgress(email, episodeId, null);
 
-    verify(watchHistoryRepository, times(1)).save(argThat(history -> history.getProgressSeconds() == 0));
+    verify(watchHistoryRepository, times(1))
+        .save(argThat(history -> history.getProgressSeconds() == 0));
   }
 
   @Test
@@ -169,7 +170,9 @@ class WatchProgressServiceTest {
 
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.empty());
 
-    assertThrows(ResourceNotFoundException.class, () -> watchProgressService.saveProgress(email, episodeId, 120));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> watchProgressService.saveProgress(email, episodeId, 120));
   }
 
   @Test
@@ -181,7 +184,9 @@ class WatchProgressServiceTest {
         .thenReturn(Optional.empty());
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.empty());
 
-    assertThrows(ResourceNotFoundException.class, () -> watchProgressService.markCompleted(email, episodeId));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> watchProgressService.markCompleted(email, episodeId));
   }
 
   @Test
@@ -209,5 +214,52 @@ class WatchProgressServiceTest {
     watchProgressService.saveProgress(email, episodeId, 105);
     assertEquals(105, initialHistory.getProgressSeconds());
     verify(watchHistoryRepository, times(2)).save(initialHistory);
+  }
+
+  @Test
+  void testCalculateSeriesProgress_WithNullProgress_HandlesGracefully() {
+    String email = "test@example.com";
+    UUID seriesId = UUID.randomUUID();
+    UUID epId1 = UUID.randomUUID();
+
+    Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
+    Episode ep1 = new Episode(series, "Ep 1", "v1.mp4", 100, 1);
+    ep1.setId(epId1);
+
+    WatchHistory history1 = new WatchHistory(email, seriesId, epId1, null, false);
+
+    when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(seriesId)).thenReturn(java.util.List.of(ep1));
+    when(watchHistoryRepository.findByUserEmailAndSeriesId(email, seriesId)).thenReturn(java.util.List.of(history1));
+
+    double progress = watchProgressService.calculateSeriesProgress(email, seriesId);
+
+    assertEquals(0.0, progress);
+  }
+
+  @Test
+  void testCalculateSeriesProgress_MultipleIncomplete_OnlyFirstRelevantWins() {
+    String email = "test@example.com";
+    UUID seriesId = UUID.randomUUID();
+    UUID epId1 = UUID.randomUUID();
+    UUID epId2 = UUID.randomUUID();
+
+    Series series = new Series("Test Series", "Description", "Tech", "thumb.jpg");
+    Episode ep1 = new Episode(series, "Ep 1", "v1.mp4", 100, 1);
+    ep1.setId(epId1);
+    Episode ep2 = new Episode(series, "Ep 2", "v2.mp4", 100, 2);
+    ep2.setId(epId2);
+
+    WatchHistory history1 = new WatchHistory(email, seriesId, epId1, 50, false);
+    WatchHistory history2 = new WatchHistory(email, seriesId, epId2, 90, false);
+
+    when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(seriesId)).thenReturn(java.util.List.of(ep1, ep2));
+    when(watchHistoryRepository.findByUserEmailAndSeriesId(email, seriesId))
+        .thenReturn(java.util.List.of(history1, history2));
+
+    double progress = watchProgressService.calculateSeriesProgress(email, seriesId);
+
+    // (0 completed + 0.5 partial) / 2 episodes * 100 = 25.0
+    // If it didn't break, it would be (0 + 0.9) / 2 * 100 = 45.0
+    assertEquals(25.0, progress);
   }
 }
