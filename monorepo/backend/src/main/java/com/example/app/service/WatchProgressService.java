@@ -24,6 +24,7 @@ public class WatchProgressService {
     this.episodeRepository = episodeRepository;
   }
 
+  @org.springframework.transaction.annotation.Transactional(readOnly = true)
   public Optional<ContinueWatchingResponse> getContinueWatching(String userEmail) {
     Optional<WatchHistory> incompleteWatch = watchHistoryRepository
         .findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(

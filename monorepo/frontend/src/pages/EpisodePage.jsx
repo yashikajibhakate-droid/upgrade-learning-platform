@@ -24,7 +24,61 @@ const EpisodePage = () => {
     const [refresherVideoUrl, setRefresherVideoUrl] = useState(null);
     const [countdown, setCountdown] = useState(null);
     const [isLastEpisode, setIsLastEpisode] = useState(false);
-    const email = localStorage.getItem('userEmail');
+    const [email, setEmail] = useState(localStorage.getItem('userEmail') || '');
+
+    useEffect(() => {
+        const token = localStorage.getItem('authToken');
+        const tokenParam = searchParams.get('token');
+        const emailParam = searchParams.get('email'); // Fallback for old links or if token fails? No, purely for guest mode legacy.
+
+        const verifyToken = async () => {
+            if (tokenParam) {
+                // Magic Link Login Flow
+                try {
+                    const response = await api.post('/api/auth/magic-login', { token: tokenParam });
+                    const { token: newToken, email: newEmail } = response.data;
+
+                    localStorage.setItem('authToken', newToken);
+                    localStorage.setItem('userEmail', newEmail);
+                    setEmail(newEmail);
+
+                    // Clear query param to clean URL
+                    setSearchParams(params => {
+                        params.delete('token');
+                        return params;
+                    });
+
+                    return; // Stop processing, we are logged in.
+                } catch (err) {
+                    console.error("Magic login failed:", err);
+                    // Fallthrough to normal checks
+                }
+            }
+
+            // Normal Session Check
+            if (token) {
+                try {
+                    const response = await api.get('/api/auth/me');
+                    const verifiedEmail = response.data.email;
+                    localStorage.setItem('userEmail', verifiedEmail);
+                    setEmail(verifiedEmail);
+                } catch (err) {
+                    console.error("Token verification failed:", err);
+                    // Invalid token? Don't trust it.
+                    if (emailParam) {
+                        setEmail(emailParam);
+                    }
+                }
+            } else if (emailParam) {
+                // Guest mode (Legacy or if magic link failed but email param exists)
+                // DO NOT persist to localStorage
+                setEmail(emailParam);
+            }
+        };
+
+        verifyToken();
+    }, [searchParams]);
+
     const progressSaveTimerRef = useRef(null);
     const lastProgressRef = useRef(0); // Track current progress for cleanup
 
@@ -60,7 +114,8 @@ const EpisodePage = () => {
                     let finalEpisode = episodeToLoad;
 
                     // Check if this episode is already completed
-                    if (email) {
+                    const token = localStorage.getItem('authToken');
+                    if (email && token) {
                         try {
                             const completionRes = await watchProgressApi.isCompleted(email, episodeToLoad.id);
 
@@ -111,7 +166,8 @@ const EpisodePage = () => {
             }
 
             // Save final progress when unmounting
-            if (email && currentEpisode && lastProgressRef.current > 0) {
+            const token = localStorage.getItem('authToken');
+            if (email && token && currentEpisode && lastProgressRef.current > 0) {
                 watchProgressApi.saveProgress(email, currentEpisode.id, Math.floor(lastProgressRef.current))
                     .catch(err => console.error('Failed to save final progress:', err));
             }
@@ -119,7 +175,8 @@ const EpisodePage = () => {
     }, [email, currentEpisode]);
 
     const handleProgressUpdate = (currentTime) => {
-        if (!email || !currentEpisode) return;
+        const token = localStorage.getItem('authToken');
+        if (!email || !token || !currentEpisode) return;
 
         // Store current progress for cleanup
         lastProgressRef.current = currentTime;
@@ -136,11 +193,16 @@ const EpisodePage = () => {
     };
 
     const handleEpisodeEnded = async () => {
+        const token = localStorage.getItem('authToken');
         if (!email || !currentEpisode) return;
 
         try {
-            // Mark current episode as completed
-            await watchProgressApi.markComplete(email, currentEpisode.id);
+            // Mark current episode as completed only if we have a token
+            if (token) {
+                await watchProgressApi.markComplete(email, currentEpisode.id);
+            } else {
+                console.warn('Cannot mark complete: No auth token');
+            }
 
             // Check if feedback modal was already shown for this episode (page refresh scenario)
             const feedbackSessionKey = `feedback_shown_${currentEpisode.id}`;
@@ -320,7 +382,7 @@ const EpisodePage = () => {
             <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
                 <p className="text-red-500 mb-4">{error || "Series not found"}</p>
                 <button
-                    onClick={() => navigate('/recommendations')}
+                    onClick={() => navigate('/recommendations', { state: { email } })}
                     className="text-indigo-600 hover:underline flex items-center gap-2"
                 >
                     <ArrowLeft size={16} /> Back to Recommendations
@@ -332,16 +394,37 @@ const EpisodePage = () => {
     return (
         <div className="min-h-screen bg-gray-900 text-white">
             {/* Header / Nav */}
-            <div className="p-4 border-b border-gray-800 flex items-center gap-4">
-                <button
-                    onClick={() => navigate('/recommendations')}
-                    className="p-2 hover:bg-gray-800 rounded-full transition-colors"
-                >
-                    <ArrowLeft size={24} />
-                </button>
-                <div>
-                    <h1 className="text-lg font-bold">{series.title}</h1>
-                    <p className="text-sm text-gray-400">{currentEpisode ? currentEpisode.title : 'No Episodes'}</p>
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate('/recommendations', { state: { email } })}
+                        className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <div>
+                        <h1 className="text-lg font-bold">{series.title}</h1>
+                        <p className="text-sm text-gray-400">{currentEpisode ? currentEpisode.title : 'No Episodes'}</p>
+                    </div>
+                </div>
+
+                {/* User Status Indicator */}
+                <div className="flex items-center gap-4">
+                    {email ? (
+                        <div className="flex items-center gap-3 bg-gray-800/50 py-1.5 px-3 rounded-full border border-gray-700/50">
+                            <span className="text-sm text-gray-300 hidden md:block">{email}</span>
+                            <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs ring-2 ring-indigo-500/30">
+                                {email[0].toUpperCase()}
+                            </div>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="text-indigo-400 hover:text-indigo-300 text-sm font-bold bg-gray-800 py-2 px-4 rounded-lg border border-gray-700 hover:border-indigo-500/50 transition-all"
+                        >
+                            Log In
+                        </button>
+                    )}
                 </div>
             </div>
 

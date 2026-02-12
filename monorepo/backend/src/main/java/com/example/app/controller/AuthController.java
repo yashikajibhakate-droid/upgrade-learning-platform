@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-  @Autowired private AuthService authService;
+  @Autowired
+  private AuthService authService;
 
-  @Autowired private RateLimitingService rateLimitingService;
+  @Autowired
+  private RateLimitingService rateLimitingService;
 
   @PostMapping("/generate-otp")
   public ResponseEntity<?> generateOtp(@RequestBody Map<String, String> payload) {
@@ -79,5 +81,50 @@ public class AuthController {
     }
     authService.logout(token);
     return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+  }
+
+  @GetMapping("/me")
+  public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
+    }
+    String token = authHeader.substring(7);
+    Optional<com.example.app.model.Session> session = authService.getSession(token);
+    if (session.isPresent()) {
+      User user = session.get().getUser();
+      return ResponseEntity.ok(Map.of(
+          "email", user.getEmail(),
+          "hasInterests", user.getInterests() != null && !user.getInterests().isEmpty()));
+    }
+    return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
+  }
+
+  @PostMapping("/magic-login")
+  public ResponseEntity<?> magicLogin(@RequestBody Map<String, String> payload) {
+    String token = payload.get("token");
+    if (token == null || token.isEmpty()) {
+      return ResponseEntity.badRequest().body(Map.of("error", "Token is required"));
+    }
+
+    try {
+      Optional<String> authTokenOpt = authService.verifyMagicToken(token);
+      if (authTokenOpt.isPresent()) {
+        String authToken = authTokenOpt.get();
+        // Get user details for response
+        Optional<com.example.app.model.Session> session = authService.getSession(authToken);
+        if (session.isPresent()) {
+          User user = session.get().getUser();
+          boolean hasInterests = user.getInterests() != null && !user.getInterests().isEmpty();
+          return ResponseEntity.ok(Map.of(
+              "message", "Login successful",
+              "email", user.getEmail(),
+              "token", authToken,
+              "hasInterests", hasInterests));
+        }
+      }
+      return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired token"));
+    } catch (Exception e) {
+      return ResponseEntity.status(401).body(Map.of("error", "Invalid token format"));
+    }
   }
 }

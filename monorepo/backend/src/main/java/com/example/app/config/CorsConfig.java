@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig {
 
-  @Value("${cors.allowed-origins:http://localhost:3000}")
+  @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
   private String allowedOrigins;
 
   @Bean
@@ -17,12 +17,16 @@ public class CorsConfig {
     return new WebMvcConfigurer() {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
-        String[] origins =
-            java.util.Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .map(s -> s.endsWith("/") ? s.substring(0, s.length() - 1) : s)
-                .toArray(String[]::new);
+        java.util.List<String> originList = new java.util.ArrayList<>();
+        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+          java.util.Arrays.stream(allowedOrigins.split(","))
+              .map(String::trim)
+              .filter(s -> !s.isEmpty())
+              .map(s -> s.endsWith("/") ? s.substring(0, s.length() - 1) : s)
+              .forEach(originList::add);
+        }
+
+        String[] origins = originList.toArray(new String[0]);
 
         registry
             .addMapping("/**")

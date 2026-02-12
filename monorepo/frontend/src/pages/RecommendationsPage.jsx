@@ -30,13 +30,16 @@ const RecommendationsPage = () => {
                 setOthers(response.data.others);
 
                 // Fetch continue watching data
-                try {
-                    const continueResponse = await watchProgressApi.getContinueWatching(email);
-                    setContinueWatching(continueResponse.data);
-                } catch (err) {
-                    // If 404, user has no incomplete episodes - this is expected
-                    if (err.response?.status !== 404) {
-                        console.error('Failed to load continue watching:', err);
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    try {
+                        const continueResponse = await watchProgressApi.getContinueWatching(email);
+                        setContinueWatching(continueResponse.data);
+                    } catch (err) {
+                        // If 404, user has no incomplete episodes - this is expected
+                        if (err.response?.status !== 404) {
+                            console.error('Failed to load continue watching:', err);
+                        }
                     }
                 }
             } catch (err) {
