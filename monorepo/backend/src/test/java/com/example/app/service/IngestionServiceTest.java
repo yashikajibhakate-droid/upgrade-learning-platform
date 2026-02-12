@@ -27,13 +27,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class IngestionServiceTest {
 
-  @Mock private SeriesRepository seriesRepository;
+  @Mock
+  private SeriesRepository seriesRepository;
 
-  @Mock private EpisodeRepository episodeRepository;
+  @Mock
+  private EpisodeRepository episodeRepository;
 
-  @Mock private MCQRepository mcqRepository;
+  @Mock
+  private MCQRepository mcqRepository;
 
-  @InjectMocks private IngestionService ingestionService;
+  @InjectMocks
+  private IngestionService ingestionService;
 
   private IngestRequest ingestRequest;
 
@@ -117,5 +121,39 @@ public class IngestionServiceTest {
 
     verify(seriesRepository, times(1)).findById(seriesId);
     verify(seriesRepository, times(1)).save(existingSeries);
+  }
+
+  @Test
+  void testIngestWithUnknownSeriesId_ShouldThrowException() {
+    UUID unknownId = UUID.randomUUID();
+    ingestRequest.setSeriesId(unknownId);
+
+    when(seriesRepository.findById(unknownId)).thenReturn(Optional.empty());
+
+    org.junit.jupiter.api.Assertions.assertThrows(
+        com.example.app.exception.ResourceNotFoundException.class,
+        () -> ingestionService.ingestContent(ingestRequest));
+
+    verify(seriesRepository).findById(unknownId);
+    verify(seriesRepository, never()).save(any());
+  }
+
+  @Test
+  void testIngestWithNullEpisodes_ShouldSucceed() {
+    ingestRequest.setEpisodes(null);
+
+    when(seriesRepository.save(any(Series.class)))
+        .thenAnswer(
+            i -> {
+              Series s = i.getArgument(0);
+              s.setId(UUID.randomUUID());
+              return s;
+            });
+
+    org.junit.jupiter.api.Assertions.assertDoesNotThrow(
+        () -> ingestionService.ingestContent(ingestRequest));
+
+    verify(seriesRepository, times(1)).save(any(Series.class));
+    verify(episodeRepository, never()).save(any());
   }
 }

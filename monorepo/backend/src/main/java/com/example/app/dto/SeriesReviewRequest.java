@@ -3,5 +3,7 @@ package com.example.app.dto;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-public record SeriesReviewRequest(@Min(1) @Max(5) Integer rating, @NotBlank String comment) {}
+public record SeriesReviewRequest(@NotNull @Min(1) @Max(5) Integer rating, @NotBlank String comment) {
+}

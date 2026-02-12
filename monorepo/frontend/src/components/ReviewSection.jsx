@@ -32,6 +32,12 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
     };
 
     useEffect(() => {
+        if (isLoggedIn) {
+            setUserEmail(localStorage.getItem('userEmail'));
+        }
+    }, [isLoggedIn]);
+
+    useEffect(() => {
         if (seriesId) {
             fetchReviews();
         }

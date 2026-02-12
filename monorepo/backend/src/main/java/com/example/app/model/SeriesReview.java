@@ -1,5 +1,6 @@
 package com.example.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -9,13 +10,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(
-    name = "series_reviews",
-    uniqueConstraints = {
-      @UniqueConstraint(
-          name = "uk_series_review_user_series",
-          columnNames = {"user_email", "series_id"})
-    })
+@Table(name = "series_reviews", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_series_review_user_series", columnNames = { "user_email", "series_id" })
+})
 public class SeriesReview {
 
   @Id
@@ -24,6 +21,7 @@ public class SeriesReview {
 
   @Column(name = "user_email", nullable = false)
   @NotBlank(message = "User email is required")
+  @JsonIgnore
   private String userEmail;
 
   @Column(name = "series_id", nullable = false)
@@ -47,7 +45,8 @@ public class SeriesReview {
   @Column(nullable = false)
   private LocalDateTime createdAt;
 
-  public SeriesReview() {}
+  public SeriesReview() {
+  }
 
   public SeriesReview(
       String userEmail,
@@ -123,5 +122,19 @@ public class SeriesReview {
 
   public void setCreatedAt(LocalDateTime createdAt) {
     this.createdAt = createdAt;
+  }
+
+  public String getMaskedUserEmail() {
+    if (userEmail == null || !userEmail.contains("@")) {
+      return "a***@domain.com";
+    }
+    int atIndex = userEmail.indexOf("@");
+    String username = userEmail.substring(0, atIndex);
+    String domain = userEmail.substring(atIndex);
+
+    if (username.length() <= 1) {
+      return username + "***" + domain;
+    }
+    return username.charAt(0) + "***" + domain;
   }
 }

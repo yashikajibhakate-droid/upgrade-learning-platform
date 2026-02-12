@@ -25,7 +25,8 @@ public class Episode {
 
   private Integer sequenceNumber;
 
-  public Episode() {}
+  public Episode() {
+  }
 
   public Episode(
       Series series,
@@ -42,6 +43,10 @@ public class Episode {
 
   public UUID getId() {
     return id;
+  }
+
+  public void setId(UUID id) {
+    this.id = id;
   }
 
   public Series getSeries() {

@@ -3,24 +3,52 @@ package com.example.app.config;
 import com.example.app.model.Session;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
-  private static final Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
+  private final AntPathMatcher pathMatcher = new AntPathMatcher();
+  private final List<String> publicPaths = Arrays.asList("/api/series/**", "/api/users/interests", "/api/health");
 
-  @Autowired private com.example.app.service.AuthService authService;
+  @Autowired
+  private com.example.app.service.AuthService authService;
 
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {
-    if (request.getMethod().equals("OPTIONS")) return true;
+    if (request.getMethod().equals("OPTIONS"))
+      return true;
+
+    String path = request.getRequestURI();
+    String method = request.getMethod();
+    String emailParam = request.getParameter("email");
+
+    boolean isPublic = false;
+    // Endpoints with email query params are never public
+    if (emailParam == null) {
+      for (String pattern : publicPaths) {
+        if (pathMatcher.match(pattern, path)) {
+          // For series endpoints, only GET is public (to allow viewing
+          // series/episodes/reviews)
+          if (pattern.equals("/api/series/**")) {
+            if (method.equals("GET")) {
+              isPublic = true;
+              break;
+            }
+          } else {
+            isPublic = true;
+            break;
+          }
+        }
+      }
+    }
 
     String authHeader = request.getHeader("Authorization");
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -32,8 +60,7 @@ public class AuthInterceptor implements HandlerInterceptor {
       }
     }
 
-    // Allow GET requests to proceed without authentication
-    if (request.getMethod().equals("GET")) {
+    if (isPublic) {
       return true;
     }
 

@@ -43,6 +43,6 @@ describe('ReviewForm', () => {
         render(<ReviewForm onSubmit={() => { }} loading={true} />);
         const submitBtn = screen.getByRole('button', { name: /submit review/i });
         expect(submitBtn).toBeDisabled();
-        expect(submitBtn.querySelector('svg.animate-spin')).toBeDefined();
+        expect(submitBtn.querySelector('svg.animate-spin')).not.toBeNull();
     });
 });

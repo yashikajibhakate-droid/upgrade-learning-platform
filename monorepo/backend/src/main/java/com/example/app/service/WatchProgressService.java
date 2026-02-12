@@ -27,8 +27,8 @@ public class WatchProgressService {
 
   @org.springframework.transaction.annotation.Transactional(readOnly = true)
   public Optional<ContinueWatchingResponse> getContinueWatching(String userEmail) {
-    Optional<WatchHistory> incompleteWatch =
-        watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
+    Optional<WatchHistory> incompleteWatch = watchHistoryRepository
+        .findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
             userEmail);
 
     if (incompleteWatch.isEmpty()) {
@@ -45,19 +45,18 @@ public class WatchProgressService {
     Episode ep = episode.get();
     Series series = ep.getSeries();
 
-    ContinueWatchingResponse response =
-        new ContinueWatchingResponse(
-            series.getId(),
-            series.getTitle(),
-            series.getThumbnailUrl(),
-            series.getCategory(),
-            ep.getId(),
-            ep.getTitle(),
-            ep.getSequenceNumber(),
-            ep.getDurationSeconds(),
-            ep.getVideoUrl(),
-            watchHistory.getProgressSeconds(),
-            watchHistory.getLastWatchedAt());
+    ContinueWatchingResponse response = new ContinueWatchingResponse(
+        series.getId(),
+        series.getTitle(),
+        series.getThumbnailUrl(),
+        series.getCategory(),
+        ep.getId(),
+        ep.getTitle(),
+        ep.getSequenceNumber(),
+        ep.getDurationSeconds(),
+        ep.getVideoUrl(),
+        watchHistory.getProgressSeconds(),
+        watchHistory.getLastWatchedAt());
 
     return Optional.of(response);
   }
@@ -67,15 +66,13 @@ public class WatchProgressService {
       progressSeconds = 0;
     }
 
-    Optional<WatchHistory> existing =
-        watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
+    Optional<WatchHistory> existing = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
 
     // Fetch episode to get duration for clamping
-    Episode episode =
-        episodeRepository
-            .findById(episodeId)
-            .orElseThrow(
-                () -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
+    Episode episode = episodeRepository
+        .findById(episodeId)
+        .orElseThrow(
+            () -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
 
     // Clamp progress to duration
     int duration = episode.getDurationSeconds();
@@ -87,17 +84,15 @@ public class WatchProgressService {
       watchHistory.setLastWatchedAt(LocalDateTime.now());
       watchHistoryRepository.save(watchHistory);
     } else {
-      WatchHistory watchHistory =
-          new WatchHistory(
-              userEmail, episode.getSeries().getId(), episodeId, clampedProgress, false);
+      WatchHistory watchHistory = new WatchHistory(
+          userEmail, episode.getSeries().getId(), episodeId, clampedProgress, false);
       watchHistory.setLastWatchedAt(LocalDateTime.now());
       watchHistoryRepository.save(watchHistory);
     }
   }
 
   public void markCompleted(String userEmail, UUID episodeId) {
-    Optional<WatchHistory> existing =
-        watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
+    Optional<WatchHistory> existing = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
 
     if (existing.isPresent()) {
       WatchHistory watchHistory = existing.get();
@@ -105,22 +100,19 @@ public class WatchProgressService {
       watchHistory.setLastWatchedAt(LocalDateTime.now());
       watchHistoryRepository.save(watchHistory);
     } else {
-      Episode episode =
-          episodeRepository
-              .findById(episodeId)
-              .orElseThrow(
-                  () -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
+      Episode episode = episodeRepository
+          .findById(episodeId)
+          .orElseThrow(
+              () -> new ResourceNotFoundException("Episode not found with id: " + episodeId));
 
-      WatchHistory watchHistory =
-          new WatchHistory(userEmail, episode.getSeries().getId(), episodeId, null, true);
+      WatchHistory watchHistory = new WatchHistory(userEmail, episode.getSeries().getId(), episodeId, null, true);
       watchHistory.setLastWatchedAt(LocalDateTime.now());
       watchHistoryRepository.save(watchHistory);
     }
   }
 
   public boolean isEpisodeCompleted(String userEmail, UUID episodeId) {
-    Optional<WatchHistory> history =
-        watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
+    Optional<WatchHistory> history = watchHistoryRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
     return history.isPresent() && history.get().isCompleted();
   }
 
@@ -130,19 +122,18 @@ public class WatchProgressService {
       return 0.0;
     }
 
-    List<WatchHistory> history =
-        watchHistoryRepository.findByUserEmailAndSeriesId(userEmail, seriesId);
+    List<WatchHistory> history = watchHistoryRepository.findByUserEmailAndSeriesId(userEmail, seriesId);
 
     long completedCount = history.stream().filter(WatchHistory::isCompleted).count();
 
     // Also consider progress in the current incomplete episode
     double partialProgress = 0.0;
     for (WatchHistory h : history) {
-      if (!h.isCompleted()) {
-        Optional<Episode> ep =
-            episodes.stream().filter(e -> e.getId().equals(h.getEpisodeId())).findFirst();
+      if (!h.isCompleted() && h.getProgressSeconds() != null) {
+        Optional<Episode> ep = episodes.stream().filter(e -> e.getId().equals(h.getEpisodeId())).findFirst();
         if (ep.isPresent() && ep.get().getDurationSeconds() > 0) {
           partialProgress = (double) h.getProgressSeconds() / ep.get().getDurationSeconds();
+          break; // Stop after first relevant incomplete episode
         }
       }
     }

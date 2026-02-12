@@ -13,6 +13,7 @@ import com.example.app.repository.MCQRepository;
 import com.example.app.repository.SeriesRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,34 +33,27 @@ public class IngestionService {
     this.mcqRepository = mcqRepository;
   }
 
+  /**
+   * Ingests content from the provided request.
+   * If request.seriesId is provided, it must exist.
+   * Otherwise, if request.seriesId is null, a new series will be created.
+   *
+   * @param request The ingestion request containing series and episode data.
+   * @throws com.example.app.exception.ResourceNotFoundException if seriesId is
+   *                                                             provided but not
+   *                                                             found.
+   */
   @Transactional
   public void ingestContent(IngestRequest request) {
     // 1. Handle Series
     Series series;
     if (request.getSeriesId() != null) {
-      series =
-          seriesRepository
-              .findById(request.getSeriesId())
-              .orElseGet(() -> createNewSeries(request));
+      series = seriesRepository
+          .findById(request.getSeriesId())
+          .orElseThrow(
+              () -> new com.example.app.exception.ResourceNotFoundException(
+                  "Series not found with ID: " + request.getSeriesId()));
     } else {
-      // Try to find by title to avoid duplicates if no ID provided
-      // This is a basic check, ideally we should have a unique constraint or slug
-      // For now we assume if ID is null we check by title or create new
-      // NOTE: SeriesRepository might not have findByTitle, so we might receive an
-      // error or need to add it.
-      // Checking repository definition in next steps, but assuming distinct titles
-      // for now.
-      // If findByTitle doesn't exist, we'll create new.
-      // Actually, to update existing series without ID, we'd need a way to lookup.
-      // For simplicity and per "No Over-Engineering", let's create a new one if ID is
-      // null,
-      // unless we can easily check.
-      // Let's assume we create new if ID is null for now, or users must provide ID to
-      // update.
-      // Wait, "Duplicate checks: repeat pushes of the same episode ID should update
-      // fields".
-      // It doesn't explicitly say about Series title.
-      // let's stick to: ID provided -> Update, ID null -> Create.
       series = createNewSeries(request);
     }
 
@@ -68,8 +62,10 @@ public class IngestionService {
     series = seriesRepository.save(series);
 
     // 2. Handle Episodes
-    for (IngestEpisodeRequest episodeRequest : request.getEpisodes()) {
-      handleEpisode(series, episodeRequest);
+    if (request.getEpisodes() != null) {
+      for (IngestEpisodeRequest episodeRequest : request.getEpisodes()) {
+        handleEpisode(series, episodeRequest);
+      }
     }
   }
 
@@ -106,10 +102,9 @@ public class IngestionService {
       // I'll assume we can define or use an existing method.
       // Let's try to query.
       // For now, I'll fetch all episodes for series and filter.
-      List<Episode> existingEpisodes =
-          episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
+      List<Episode> existingEpisodes = episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
       for (Episode e : existingEpisodes) {
-        if (e.getSequenceNumber().equals(request.getSequenceNumber())) {
+        if (Objects.equals(e.getSequenceNumber(), request.getSequenceNumber())) {
           episode = e;
           break;
         }

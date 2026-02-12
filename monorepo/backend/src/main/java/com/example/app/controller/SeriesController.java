@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +24,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/series")
 public class SeriesController {
 
-  @Autowired private SeriesService seriesService;
-  @Autowired private SeriesReviewService seriesReviewService;
+  private static final Logger log = LoggerFactory.getLogger(SeriesController.class);
+
+  @Autowired
+  private SeriesService seriesService;
+  @Autowired
+  private SeriesReviewService seriesReviewService;
 
   @GetMapping("/recommendations")
   public ResponseEntity<?> getRecommendations(@RequestParam String email) {
@@ -61,30 +67,29 @@ public class SeriesController {
     }
 
     try {
-      SeriesReview review =
-          seriesReviewService.submitReview(
-              user.getEmail(), seriesId, reviewRequest.rating(), reviewRequest.comment());
+      SeriesReview review = seriesReviewService.submitReview(
+          user.getEmail(), seriesId, reviewRequest.rating(), reviewRequest.comment());
       return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(review));
     } catch (IllegalStateException e) {
       return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body(Map.of("error", "An error occurred while submitting the review"));
+      log.error("Unexpected error in submitReview for user {} and series {}",
+          user.getEmail(), seriesId, e);
+      throw e;
     }
   }
 
   @GetMapping("/{seriesId}/reviews")
   public ResponseEntity<List<SeriesReviewResponse>> getReviews(@PathVariable UUID seriesId) {
     List<SeriesReview> reviews = seriesReviewService.getReviewsForSeries(seriesId);
-    List<SeriesReviewResponse> response =
-        reviews.stream().map(this::mapToResponse).collect(Collectors.toList());
+    List<SeriesReviewResponse> response = reviews.stream().map(this::mapToResponse).collect(Collectors.toList());
     return ResponseEntity.ok(response);
   }
 
   private SeriesReviewResponse mapToResponse(SeriesReview review) {
     return new SeriesReviewResponse(
         review.getId(),
-        review.getUserEmail(),
+        review.getMaskedUserEmail(),
         review.getSeriesId(),
         review.getRating(),
         review.getComment(),

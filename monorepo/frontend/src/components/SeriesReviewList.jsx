@@ -21,7 +21,7 @@ const SeriesReviewList = ({ reviews }) => {
                             </div>
                             <div>
                                 <div className="font-semibold text-gray-200">
-                                    {review.userEmail.split('@')[0]}
+                                    {review.reviewerName}
                                 </div>
                                 <div className="text-xs text-gray-500">
                                     {new Date(review.createdAt).toLocaleDateString()}
@@ -34,8 +34,8 @@ const SeriesReviewList = ({ reviews }) => {
                                     key={star}
                                     size={16}
                                     className={`${star <= review.rating
-                                            ? 'fill-yellow-400 text-yellow-400'
-                                            : 'text-gray-600'
+                                        ? 'fill-yellow-400 text-yellow-400'
+                                        : 'text-gray-600'
                                         }`}
                                 />
                             ))}
