@@ -32,7 +32,7 @@ public class MCQ {
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "mcq", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "mcq", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MCQOption> options = new ArrayList<>();
 
     public MCQ() {
