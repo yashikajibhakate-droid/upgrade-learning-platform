@@ -5,6 +5,8 @@ import VerifyOtpPage from './VerifyOtpPage';
 import api from '../services/api';
 
 const mockNavigate = vi.fn();
+// Defines a mutable mock for useLocation
+let mockLocationState = { email: 'test@example.com' };
 
 // Mock Router location state
 vi.mock('react-router-dom', async () => {
@@ -12,7 +14,7 @@ vi.mock('react-router-dom', async () => {
     return {
         ...actual,
         useLocation: () => ({
-            state: { email: 'test@example.com' }
+            state: mockLocationState
         }),
         useNavigate: () => mockNavigate,
     };
@@ -24,6 +26,7 @@ describe('VerifyOtpPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         window.alert = vi.fn();
+        mockLocationState = { email: 'test@example.com' }; // Reset state
     });
 
     it('redirects to onboarding if user has no interests', async () => {
@@ -84,6 +87,83 @@ describe('VerifyOtpPage', () => {
         setItemSpy.mockRestore();
     });
 
+    it('redirects to "from" location if present in state', async () => {
+        // Setup state with "from"
+        mockLocationState = { email: 'test@example.com', from: '/protected/route' };
+
+        const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+        api.post.mockResolvedValueOnce({
+            status: 200,
+            data: { hasInterests: true, token: 'mock-token' }
+        });
+
+        render(
+            <BrowserRouter>
+                <VerifyOtpPage />
+            </BrowserRouter>
+        );
+
+        const inputs = screen.getAllByRole('textbox');
+        inputs.forEach((input, index) => {
+            fireEvent.change(input, { target: { value: String(index) } });
+        });
+
+        const verifyButton = screen.getByRole('button', { name: /Verify & Continue/i });
+        fireEvent.click(verifyButton);
+
+        await waitFor(() => {
+            expect(setItemSpy).toHaveBeenCalledWith('authToken', 'mock-token');
+            expect(setItemSpy).toHaveBeenCalledWith('userEmail', 'test@example.com');
+            expect(mockNavigate).toHaveBeenCalledWith('/protected/route', { replace: true });
+        });
+        setItemSpy.mockRestore();
+    });
+
+    it('redirects to "from" location preserving query params and hash', async () => {
+        // Setup state with "from" location object
+        const fromLocation = {
+            pathname: '/series/1/watch',
+            search: '?episodeId=2&token=magic',
+            hash: '#section'
+        };
+        mockLocationState = { email: 'test@example.com', from: fromLocation };
+
+        const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+        api.post.mockResolvedValueOnce({
+            status: 200,
+            data: { hasInterests: true, token: 'mock-token' }
+        });
+
+        render(
+            <BrowserRouter>
+                <VerifyOtpPage />
+            </BrowserRouter>
+        );
+
+        const inputs = screen.getAllByRole('textbox');
+        inputs.forEach((input, index) => {
+            fireEvent.change(input, { target: { value: String(index) } });
+        });
+
+        const verifyButton = screen.getByRole('button', { name: /Verify & Continue/i });
+        fireEvent.click(verifyButton);
+
+        await waitFor(() => {
+            expect(setItemSpy).toHaveBeenCalledWith('authToken', 'mock-token');
+            expect(setItemSpy).toHaveBeenCalledWith('userEmail', 'test@example.com');
+            // Navigate should be called with the location object or equivalent string
+            expect(mockNavigate).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    pathname: '/series/1/watch',
+                    search: '?episodeId=2&token=magic',
+                    hash: '#section'
+                }),
+                { replace: true }
+            );
+        });
+        setItemSpy.mockRestore();
+    });
+
     it('clears stale digits when pasting a shorter OTP', () => {
         render(
             <BrowserRouter>
@@ -120,4 +200,3 @@ describe('VerifyOtpPage', () => {
         expect(inputs[5].value).toBe('');
     });
 });
-

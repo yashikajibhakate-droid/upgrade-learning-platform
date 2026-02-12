@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Info, HelpCircle } from 'lucide-react';
 import api from '../services/api';
 
@@ -8,6 +8,7 @@ const LoginPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const token = localStorage.getItem('authToken');
@@ -39,7 +40,7 @@ const LoginPage = () => {
 
         try {
             await api.post('/api/auth/generate-otp', { email: trimmedEmail });
-            navigate('/verify-otp', { state: { email: trimmedEmail } });
+            navigate('/verify-otp', { state: { email: trimmedEmail, from: location.state?.from } });
         } catch (err) {
             console.error(err);
             setError('Failed to send OTP. Please try again.');
