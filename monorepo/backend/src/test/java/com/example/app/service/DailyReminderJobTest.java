@@ -38,12 +38,15 @@ public class DailyReminderJobTest {
         private SeriesService seriesService;
         @Mock
         private EmailService emailService;
+        @Mock
+        private AuthService authService;
 
         @InjectMocks
         private DailyReminderJob dailyReminderJob;
 
         private User testUser;
         private final String TEST_EMAIL = "test@example.com";
+        private final String TEST_TOKEN = "magic-token-123";
 
         @BeforeEach
         void setUp() {
@@ -55,7 +58,11 @@ public class DailyReminderJobTest {
         @Test
         void shouldSendResumeEmail_WhenContinueWatchingExists() {
                 // Arrange
-                when(userRepository.findAll()).thenReturn(List.of(testUser));
+                org.springframework.data.domain.Page<User> page = new org.springframework.data.domain.PageImpl<>(
+                                java.util.List.of(testUser));
+                when(userRepository.findAll(
+                                org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+                                .thenReturn(page);
 
                 ContinueWatchingResponse progress = new ContinueWatchingResponse(
                                 UUID.randomUUID(),
@@ -71,6 +78,7 @@ public class DailyReminderJobTest {
                                 LocalDateTime.now());
 
                 when(watchProgressService.getContinueWatching(TEST_EMAIL)).thenReturn(Optional.of(progress));
+                when(authService.generateMagicLinkToken(TEST_EMAIL)).thenReturn(TEST_TOKEN);
 
                 // Act
                 dailyReminderJob.sendDailyReminders();
@@ -81,14 +89,18 @@ public class DailyReminderJobTest {
                                                 eq(TEST_EMAIL),
                                                 eq("Resume your learning: " + progress.getSeriesTitle()),
                                                 contains("/series/" + progress.getSeriesId() + "/watch?episodeId="
-                                                                + progress.getEpisodeId() + "&email=" + TEST_EMAIL));
+                                                                + progress.getEpisodeId() + "&token=" + TEST_TOKEN));
                 verify(seriesService, never()).getRecommendations(anyString());
         }
 
         @Test
         void shouldSendRecommendationEmail_WhenNoContinueWatchingExists() {
                 // Arrange
-                when(userRepository.findAll()).thenReturn(List.of(testUser));
+                org.springframework.data.domain.Page<User> page = new org.springframework.data.domain.PageImpl<>(
+                                java.util.List.of(testUser));
+                when(userRepository.findAll(
+                                org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+                                .thenReturn(page);
                 when(watchProgressService.getContinueWatching(TEST_EMAIL)).thenReturn(Optional.empty());
 
                 Series recommendedSeries = new Series();
@@ -99,6 +111,7 @@ public class DailyReminderJobTest {
                 RecommendationResponse recommendations = new RecommendationResponse(List.of(recommendedSeries),
                                 Collections.emptyList());
                 when(seriesService.getRecommendations(TEST_EMAIL)).thenReturn(recommendations);
+                when(authService.generateMagicLinkToken(TEST_EMAIL)).thenReturn(TEST_TOKEN);
 
                 Episode firstEpisode = new Episode();
                 ReflectionTestUtils.setField(firstEpisode, "id", UUID.randomUUID());
@@ -114,13 +127,17 @@ public class DailyReminderJobTest {
                                                 eq(TEST_EMAIL),
                                                 eq("Recommended for you: " + recommendedSeries.getTitle()),
                                                 contains("/series/" + recommendedSeries.getId() + "/watch?episodeId="
-                                                                + firstEpisode.getId() + "&email=" + TEST_EMAIL));
+                                                                + firstEpisode.getId() + "&token=" + TEST_TOKEN));
         }
 
         @Test
         void shouldSendFallbackRecommendationEmail_WhenMainRecommendationEmpty() {
                 // Arrange
-                when(userRepository.findAll()).thenReturn(List.of(testUser));
+                org.springframework.data.domain.Page<User> page = new org.springframework.data.domain.PageImpl<>(
+                                java.util.List.of(testUser));
+                when(userRepository.findAll(
+                                org.mockito.ArgumentMatchers.any(org.springframework.data.domain.Pageable.class)))
+                                .thenReturn(page);
                 when(watchProgressService.getContinueWatching(TEST_EMAIL)).thenReturn(Optional.empty());
 
                 Series fallbackSeries = new Series();
@@ -132,6 +149,7 @@ public class DailyReminderJobTest {
                 RecommendationResponse recommendations = new RecommendationResponse(Collections.emptyList(),
                                 List.of(fallbackSeries));
                 when(seriesService.getRecommendations(TEST_EMAIL)).thenReturn(recommendations);
+                when(authService.generateMagicLinkToken(TEST_EMAIL)).thenReturn(TEST_TOKEN);
 
                 Episode firstEpisode = new Episode();
                 ReflectionTestUtils.setField(firstEpisode, "id", UUID.randomUUID());
@@ -147,6 +165,6 @@ public class DailyReminderJobTest {
                                                 eq(TEST_EMAIL),
                                                 eq("Recommended for you: " + fallbackSeries.getTitle()),
                                                 contains("/series/" + fallbackSeries.getId() + "/watch?episodeId="
-                                                                + firstEpisode.getId() + "&email=" + TEST_EMAIL));
+                                                                + firstEpisode.getId() + "&token=" + TEST_TOKEN));
         }
 }

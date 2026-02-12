@@ -27,11 +27,56 @@ const EpisodePage = () => {
     const [email, setEmail] = useState(localStorage.getItem('userEmail') || '');
 
     useEffect(() => {
-        const emailParam = searchParams.get('email');
-        if (emailParam) {
-            localStorage.setItem('userEmail', emailParam);
-            setEmail(emailParam);
-        }
+        const token = localStorage.getItem('authToken');
+        const tokenParam = searchParams.get('token');
+        const emailParam = searchParams.get('email'); // Fallback for old links or if token fails? No, purely for guest mode legacy.
+
+        const verifyToken = async () => {
+            if (tokenParam) {
+                // Magic Link Login Flow
+                try {
+                    const response = await api.post('/api/auth/magic-login', { token: tokenParam });
+                    const { token: newToken, email: newEmail } = response.data;
+
+                    localStorage.setItem('authToken', newToken);
+                    localStorage.setItem('userEmail', newEmail);
+                    setEmail(newEmail);
+
+                    // Clear query param to clean URL
+                    setSearchParams(params => {
+                        params.delete('token');
+                        return params;
+                    });
+
+                    return; // Stop processing, we are logged in.
+                } catch (err) {
+                    console.error("Magic login failed:", err);
+                    // Fallthrough to normal checks
+                }
+            }
+
+            // Normal Session Check
+            if (token) {
+                try {
+                    const response = await api.get('/api/auth/me');
+                    const verifiedEmail = response.data.email;
+                    localStorage.setItem('userEmail', verifiedEmail);
+                    setEmail(verifiedEmail);
+                } catch (err) {
+                    console.error("Token verification failed:", err);
+                    // Invalid token? Don't trust it.
+                    if (emailParam) {
+                        setEmail(emailParam);
+                    }
+                }
+            } else if (emailParam) {
+                // Guest mode (Legacy or if magic link failed but email param exists)
+                // DO NOT persist to localStorage
+                setEmail(emailParam);
+            }
+        };
+
+        verifyToken();
     }, [searchParams]);
 
     const progressSaveTimerRef = useRef(null);

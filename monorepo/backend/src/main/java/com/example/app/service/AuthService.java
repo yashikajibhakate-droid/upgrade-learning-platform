@@ -14,13 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthService {
 
-  @Autowired private UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
 
-  @Autowired private OtpRepository otpRepository;
+  @Autowired
+  private OtpRepository otpRepository;
 
-  @Autowired private com.example.app.repository.SessionRepository sessionRepository;
+  @Autowired
+  private com.example.app.repository.SessionRepository sessionRepository;
 
-  @Autowired private EmailService emailService;
+  @Autowired
+  private EmailService emailService;
 
   public void generateAndSendOtp(String email) {
     // Generate 6-digit OTP
@@ -83,6 +87,66 @@ public class AuthService {
   public void logout(String token) {
     String tokenHash = com.example.app.model.Session.hashToken(token);
     sessionRepository.deleteByTokenHash(tokenHash);
+  }
+
+  @Transactional
+  public String generateMagicLinkToken(String email) {
+    // 1. Generate random token
+    String rawToken = java.util.UUID.randomUUID().toString();
+    String tokenHash = Otp.hash(rawToken);
+
+    // 2. Create "OTP" record (reusing OTP table for magic link token)
+    // Expiry 1 hour
+    LocalDateTime expiry = LocalDateTime.now().plusHours(1);
+    Otp otp = new Otp(email, tokenHash, expiry);
+    otp = otpRepository.save(otp);
+
+    // 3. Return combined token: Base64(id + ":" + rawToken)
+    String combined = otp.getId() + ":" + rawToken;
+    return java.util.Base64.getEncoder().encodeToString(combined.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+  }
+
+  @Transactional
+  public Optional<String> verifyMagicToken(String combinedToken) {
+    try {
+      // 1. Decode
+      byte[] decodedBytes = java.util.Base64.getDecoder().decode(combinedToken);
+      String decoded = new String(decodedBytes, java.nio.charset.StandardCharsets.UTF_8);
+      String[] parts = decoded.split(":");
+      if (parts.length != 2)
+        return Optional.empty();
+
+      java.util.UUID id = java.util.UUID.fromString(parts[0]);
+      String rawToken = parts[1];
+
+      // 2. Find OTP record
+      Optional<Otp> otpOpt = otpRepository.findById(id);
+      if (otpOpt.isEmpty())
+        return Optional.empty();
+
+      Otp otp = otpOpt.get();
+
+      // 3. Verify
+      if (!otp.verifyOtp(rawToken) || otp.isExpired()) {
+        return Optional.empty();
+      }
+
+      // 4. Login (Create/Get User & Session)
+      User user = userRepository.findByEmail(otp.getEmail()).orElse(null);
+      if (user == null) {
+        user = new User(otp.getEmail());
+        user = userRepository.save(user);
+      }
+
+      // 5. Cleanup (Single use)
+      otpRepository.delete(otp);
+
+      // 6. Create Session
+      return Optional.of(createSession(user));
+
+    } catch (Exception e) {
+      return Optional.empty();
+    }
   }
 
   @Transactional(readOnly = true)

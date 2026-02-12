@@ -25,9 +25,7 @@ public class CorsConfig {
               .map(s -> s.endsWith("/") ? s.substring(0, s.length() - 1) : s)
               .forEach(originList::add);
         }
-        if (!originList.contains("http://localhost:5173")) {
-          originList.add("http://localhost:5173");
-        }
+
         String[] origins = originList.toArray(new String[0]);
 
         registry
