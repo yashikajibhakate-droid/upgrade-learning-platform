@@ -11,7 +11,6 @@ import com.example.app.model.User;
 import com.example.app.repository.EpisodeRepository;
 import com.example.app.repository.FeedbackRepository;
 import com.example.app.repository.UserRepository;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,17 +23,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class FeedbackServiceTest {
 
-  @Mock
-  private FeedbackRepository feedbackRepository;
+  @Mock private FeedbackRepository feedbackRepository;
 
-  @Mock
-  private EpisodeRepository episodeRepository;
+  @Mock private EpisodeRepository episodeRepository;
 
-  @Mock
-  private UserRepository userRepository;
+  @Mock private UserRepository userRepository;
 
-  @InjectMocks
-  private FeedbackService feedbackService;
+  @InjectMocks private FeedbackService feedbackService;
 
   private String testEmail;
   private UUID testEpisodeId;

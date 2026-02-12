@@ -19,17 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class DataSeeder implements CommandLineRunner {
 
-  @Autowired
-  private SeriesRepository seriesRepository;
+  @Autowired private SeriesRepository seriesRepository;
 
-  @Autowired
-  private EpisodeRepository episodeRepository;
+  @Autowired private EpisodeRepository episodeRepository;
 
-  @Autowired
-  private MCQRepository mcqRepository;
+  @Autowired private MCQRepository mcqRepository;
 
-  @Autowired
-  private MCQOptionRepository mcqOptionRepository;
+  @Autowired private MCQOptionRepository mcqOptionRepository;
 
   @Override
   @Transactional
@@ -93,10 +89,11 @@ public class DataSeeder implements CommandLineRunner {
   private void createOrUpdateSeries(
       String title, String description, String category, String imageUrl) {
 
-    Series series = seriesRepository.findAll().stream()
-        .filter(s -> s.getTitle().equals(title))
-        .findFirst()
-        .orElse(null);
+    Series series =
+        seriesRepository.findAll().stream()
+            .filter(s -> s.getTitle().equals(title))
+            .findFirst()
+            .orElse(null);
 
     if (series == null) {
       series = new Series(title, description, category, imageUrl);
@@ -110,32 +107,28 @@ public class DataSeeder implements CommandLineRunner {
   }
 
   private void ensureEpisodes(Series series) {
-    java.util.List<Episode> existingEpisodes = episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
+    java.util.List<Episode> existingEpisodes =
+        episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
 
-    // BigBuckBunny.mp4 is 596 seconds (9:56)
+    // oceans.mp4 is 46 seconds
     createOrUpdateEpisode(
-        series,
-        existingEpisodes,
-        1,
-        "Episode 1: Intro",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        596);
-    // ElephantsDream.mp4 is 653 seconds (10:53)
+        series, existingEpisodes, 1, "Episode 1: Intro", "https://vjs.zencdn.net/v/oceans.mp4", 46);
+    // sintel trailer is 52 seconds
     createOrUpdateEpisode(
         series,
         existingEpisodes,
         2,
         "Episode 2: Deep Dive",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-        653);
-    // ForBiggerBlazes.mp4 is 15 seconds
+        "https://media.w3.org/2010/05/sintel/trailer.mp4",
+        52);
+    // movie.mp4 is 12 seconds
     createOrUpdateEpisode(
         series,
         existingEpisodes,
         3,
         "Episode 3: Conclusion",
-        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        15);
+        "https://www.w3schools.com/html/movie.mp4",
+        12);
   }
 
   private void createOrUpdateEpisode(
@@ -145,14 +138,15 @@ public class DataSeeder implements CommandLineRunner {
       String title,
       String videoUrl,
       int duration) {
-    Episode episode = existingEpisodes.stream()
-        .filter(
-            e -> {
-              Integer seq = e.getSequenceNumber();
-              return seq != null && seq == sequenceNumber;
-            })
-        .findFirst()
-        .orElse(null);
+    Episode episode =
+        existingEpisodes.stream()
+            .filter(
+                e -> {
+                  Integer seq = e.getSequenceNumber();
+                  return seq != null && seq == sequenceNumber;
+                })
+            .findFirst()
+            .orElse(null);
 
     if (episode == null) {
       episode = new Episode(series, title, videoUrl, duration, sequenceNumber);
@@ -174,8 +168,7 @@ public class DataSeeder implements CommandLineRunner {
       java.util.Optional<MCQ> existingMcq = mcqRepository.findByEpisodeId(episode.getId());
       if (existingMcq.isPresent()) {
         MCQ mcq = existingMcq.get();
-        mcq.setRefresherVideoUrl(
-            "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4");
+        mcq.setRefresherVideoUrl("https://vjs.zencdn.net/v/oceans.mp4");
         mcqRepository.save(mcq);
         continue;
       }
@@ -213,10 +206,7 @@ public class DataSeeder implements CommandLineRunner {
       }
 
       // Create and save MCQ
-      MCQ mcq = new MCQ(
-          episode.getId(),
-          question,
-          "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4");
+      MCQ mcq = new MCQ(episode.getId(), question, "https://vjs.zencdn.net/v/oceans.mp4");
       mcq = mcqRepository.save(mcq);
 
       // Create and save options
@@ -235,11 +225,7 @@ public class DataSeeder implements CommandLineRunner {
       }
 
       System.out.println(
-          "Created MCQ for episode: "
-              + episode.getTitle()
-              + " (ID: "
-              + episode.getId()
-              + ")");
+          "Created MCQ for episode: " + episode.getTitle() + " (ID: " + episode.getId() + ")");
       mcqCreatedCount++;
     }
 

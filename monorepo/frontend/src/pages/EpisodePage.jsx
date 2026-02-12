@@ -4,9 +4,17 @@ import api, { watchProgressApi, feedbackApi, mcqApi } from '../services/api';
 import VideoPlayer from '../components/VideoPlayer';
 import FeedbackModal from '../components/FeedbackModal';
 import MCQModal from '../components/MCQModal';
+import ReviewSection from '../components/ReviewSection';
 import { ArrowLeft, PlayCircle, Loader } from 'lucide-react';
 
 const EpisodePage = () => {
+    const formatDuration = (seconds) => {
+        if (!seconds && seconds !== 0) return '0 min';
+        if (seconds < 60) return `${seconds} sec`;
+        const mins = Math.floor(seconds / 60);
+        return `${mins} min${mins !== 1 ? 's' : ''}`;
+    };
+
     const { seriesId } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -480,7 +488,7 @@ const EpisodePage = () => {
                             <div className="bg-gray-800 p-6 rounded-2xl">
                                 <h2 className="text-2xl font-bold mb-2">{currentEpisode.title}</h2>
                                 <p className="text-gray-400 leading-relaxed">
-                                    Episode {currentEpisode.sequenceNumber} • {Math.floor(currentEpisode.durationSeconds / 60)} mins
+                                    Episode {currentEpisode.sequenceNumber} • {formatDuration(currentEpisode.durationSeconds)}
                                 </p>
                             </div>
                         </>
@@ -512,13 +520,18 @@ const EpisodePage = () => {
                                         {ep.sequenceNumber}. {ep.title}
                                     </div>
                                     <div className={`text-sm mt-1 ${currentEpisode?.id === ep.id ? 'text-indigo-200' : 'text-gray-500'}`}>
-                                        {Math.floor(ep.durationSeconds / 60)} min
+                                        {formatDuration(ep.durationSeconds)}
                                     </div>
                                 </div>
                             </button>
                         ))}
                     </div>
                 </div>
+            </div>
+
+            {/* Review Section */}
+            <div className="max-w-7xl mx-auto p-4 md:p-6">
+                <ReviewSection seriesId={seriesId} isLoggedIn={!!localStorage.getItem('authToken')} />
             </div>
 
             {/* Feedback Modal */}

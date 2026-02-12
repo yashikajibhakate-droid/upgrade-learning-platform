@@ -1,8 +1,7 @@
 package com.example.app.service;
 
-import com.example.app.model.Feedback;
 import com.example.app.model.Episode;
-
+import com.example.app.model.Feedback;
 import com.example.app.model.Series;
 import com.example.app.model.User;
 import com.example.app.repository.EpisodeRepository;
@@ -32,17 +31,20 @@ public class FeedbackService {
 
   @Transactional
   public void saveFeedback(String userEmail, UUID episodeId, Boolean isHelpful) {
-    Optional<Feedback> existing = feedbackRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
+    Optional<Feedback> existing =
+        feedbackRepository.findByUserEmailAndEpisodeId(userEmail, episodeId);
 
-    Episode episode = episodeRepository
-        .findById(episodeId)
-        .orElseThrow(() -> new RuntimeException("Episode not found"));
+    Episode episode =
+        episodeRepository
+            .findById(episodeId)
+            .orElseThrow(() -> new RuntimeException("Episode not found"));
     Series series = episode.getSeries();
     String category = series.getCategory();
 
-    User user = userRepository
-        .findByEmail(userEmail)
-        .orElseThrow(() -> new RuntimeException("User not found"));
+    User user =
+        userRepository
+            .findByEmail(userEmail)
+            .orElseThrow(() -> new RuntimeException("User not found"));
 
     // Calculate weight adjustment
     int weightChange = 0;

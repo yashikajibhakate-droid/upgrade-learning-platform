@@ -24,15 +24,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class WatchProgressServiceTest {
 
-  @Mock
-  private WatchHistoryRepository watchHistoryRepository;
-  @Mock
-  private EpisodeRepository episodeRepository;
-  @Mock
-  private SeriesRepository seriesRepository;
+  @Mock private WatchHistoryRepository watchHistoryRepository;
+  @Mock private EpisodeRepository episodeRepository;
+  @Mock private SeriesRepository seriesRepository;
 
-  @InjectMocks
-  private WatchProgressService watchProgressService;
+  @InjectMocks private WatchProgressService watchProgressService;
 
   @Test
   void testGetContinueWatching_WithIncompleteEpisode_ReturnsData() {
@@ -47,7 +43,7 @@ class WatchProgressServiceTest {
     watchHistory.setLastWatchedAt(LocalDateTime.now());
 
     when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
-        email))
+            email))
         .thenReturn(Optional.of(watchHistory));
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
@@ -64,7 +60,7 @@ class WatchProgressServiceTest {
     String email = "test@example.com";
 
     when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
-        email))
+            email))
         .thenReturn(Optional.empty());
 
     Optional<ContinueWatchingResponse> result = watchProgressService.getContinueWatching(email);
@@ -159,7 +155,8 @@ class WatchProgressServiceTest {
 
     watchProgressService.saveProgress(email, episodeId, null);
 
-    verify(watchHistoryRepository, times(1)).save(argThat(history -> history.getProgressSeconds() == 0));
+    verify(watchHistoryRepository, times(1))
+        .save(argThat(history -> history.getProgressSeconds() == 0));
   }
 
   @Test
@@ -169,7 +166,9 @@ class WatchProgressServiceTest {
 
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.empty());
 
-    assertThrows(ResourceNotFoundException.class, () -> watchProgressService.saveProgress(email, episodeId, 120));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> watchProgressService.saveProgress(email, episodeId, 120));
   }
 
   @Test
@@ -181,7 +180,9 @@ class WatchProgressServiceTest {
         .thenReturn(Optional.empty());
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.empty());
 
-    assertThrows(ResourceNotFoundException.class, () -> watchProgressService.markCompleted(email, episodeId));
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> watchProgressService.markCompleted(email, episodeId));
   }
 
   @Test

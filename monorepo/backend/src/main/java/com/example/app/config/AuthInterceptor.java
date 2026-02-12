@@ -15,15 +15,12 @@ public class AuthInterceptor implements HandlerInterceptor {
 
   private static final Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
 
-  @Autowired
-  private com.example.app.service.AuthService authService;
+  @Autowired private com.example.app.service.AuthService authService;
 
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {
-    log.debug("Processing request: {} Method: {}", request.getRequestURI(), request.getMethod());
-    if (request.getMethod().equals("OPTIONS"))
-      return true;
+    if (request.getMethod().equals("OPTIONS")) return true;
 
     String authHeader = request.getHeader("Authorization");
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -33,6 +30,11 @@ public class AuthInterceptor implements HandlerInterceptor {
         request.setAttribute("user", session.get().getUser());
         return true;
       }
+    }
+
+    // Allow GET requests to proceed without authentication
+    if (request.getMethod().equals("GET")) {
+      return true;
     }
 
     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

@@ -61,4 +61,10 @@ export const mcqApi = {
         api.post('/api/mcq/validate', { mcqId, selectedOptionId }),
 };
 
+// Series Review API Methods
+export const seriesReviewApi = {
+    submitReview: (seriesId, reviewData) => api.post(`/api/series/${seriesId}/reviews`, reviewData),
+    getReviews: (seriesId) => api.get(`/api/series/${seriesId}/reviews`),
+};
+
 export default api;

@@ -27,93 +27,95 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class IngestionServiceTest {
 
-    @Mock
-    private SeriesRepository seriesRepository;
+  @Mock private SeriesRepository seriesRepository;
 
-    @Mock
-    private EpisodeRepository episodeRepository;
+  @Mock private EpisodeRepository episodeRepository;
 
-    @Mock
-    private MCQRepository mcqRepository;
+  @Mock private MCQRepository mcqRepository;
 
-    @InjectMocks
-    private IngestionService ingestionService;
+  @InjectMocks private IngestionService ingestionService;
 
-    private IngestRequest ingestRequest;
+  private IngestRequest ingestRequest;
 
-    @BeforeEach
-    void setUp() {
-        ingestRequest = new IngestRequest();
-        ingestRequest.setSeriesTitle("Test Series");
-        ingestRequest.setSeriesDescription("Description");
-        ingestRequest.setSeriesCategory("Category");
-        ingestRequest.setSeriesThumbnailUrl("http://thumb.url");
+  @BeforeEach
+  void setUp() {
+    ingestRequest = new IngestRequest();
+    ingestRequest.setSeriesTitle("Test Series");
+    ingestRequest.setSeriesDescription("Description");
+    ingestRequest.setSeriesCategory("Category");
+    ingestRequest.setSeriesThumbnailUrl("http://thumb.url");
 
-        IngestEpisodeRequest episodeRequest = new IngestEpisodeRequest();
-        episodeRequest.setTitle("Test Episode");
-        episodeRequest.setVideoUrl("http://video.url");
-        episodeRequest.setDurationSeconds(60);
-        episodeRequest.setSequenceNumber(1);
+    IngestEpisodeRequest episodeRequest = new IngestEpisodeRequest();
+    episodeRequest.setTitle("Test Episode");
+    episodeRequest.setVideoUrl("http://video.url");
+    episodeRequest.setDurationSeconds(60);
+    episodeRequest.setSequenceNumber(1);
 
-        IngestMCQRequest mcqRequest = new IngestMCQRequest();
-        mcqRequest.setQuestion("Test Question");
-        mcqRequest.setRefresherVideoUrl("http://refresher.url");
+    IngestMCQRequest mcqRequest = new IngestMCQRequest();
+    mcqRequest.setQuestion("Test Question");
+    mcqRequest.setRefresherVideoUrl("http://refresher.url");
 
-        List<IngestMCQOptionRequest> options = new ArrayList<>();
-        IngestMCQOptionRequest option = new IngestMCQOptionRequest();
-        option.setOptionText("Option 1");
-        option.setIsCorrect(true);
-        option.setSequenceNumber(1);
-        options.add(option);
-        mcqRequest.setOptions(options);
+    List<IngestMCQOptionRequest> options = new ArrayList<>();
+    IngestMCQOptionRequest option = new IngestMCQOptionRequest();
+    option.setOptionText("Option 1");
+    option.setIsCorrect(true);
+    option.setSequenceNumber(1);
+    options.add(option);
+    mcqRequest.setOptions(options);
 
-        episodeRequest.setMcq(mcqRequest);
-        ingestRequest.setEpisodes(List.of(episodeRequest));
-    }
+    episodeRequest.setMcq(mcqRequest);
+    ingestRequest.setEpisodes(List.of(episodeRequest));
+  }
 
-    @Test
-    void testIngestNewContent() {
-        when(seriesRepository.save(any(Series.class))).thenAnswer(i -> {
-            Series s = i.getArgument(0);
-            s.setId(UUID.randomUUID());
-            return s;
-        });
+  @Test
+  void testIngestNewContent() {
+    when(seriesRepository.save(any(Series.class)))
+        .thenAnswer(
+            i -> {
+              Series s = i.getArgument(0);
+              s.setId(UUID.randomUUID());
+              return s;
+            });
 
-        when(episodeRepository.save(any(Episode.class))).thenAnswer(i -> {
-            Episode e = i.getArgument(0);
-            return e; // id is auto-generated usually, but here we mock
-        });
+    when(episodeRepository.save(any(Episode.class)))
+        .thenAnswer(
+            i -> {
+              Episode e = i.getArgument(0);
+              return e; // id is auto-generated usually, but here we mock
+            });
 
-        // Mock finding existing episodes (empty list for new content)
-        when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(any(UUID.class))).thenReturn(new ArrayList<>());
+    // Mock finding existing episodes (empty list for new content)
+    when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(any(UUID.class)))
+        .thenReturn(new ArrayList<>());
 
-        when(mcqRepository.findByEpisodeId(any())).thenReturn(Optional.empty());
+    when(mcqRepository.findByEpisodeId(any())).thenReturn(Optional.empty());
 
-        ingestionService.ingestContent(ingestRequest);
+    ingestionService.ingestContent(ingestRequest);
 
-        verify(seriesRepository, times(1)).save(any(Series.class));
-        verify(episodeRepository, times(1)).save(any(Episode.class));
-        verify(mcqRepository, times(1)).save(any(MCQ.class));
-    }
+    verify(seriesRepository, times(1)).save(any(Series.class));
+    verify(episodeRepository, times(1)).save(any(Episode.class));
+    verify(mcqRepository, times(1)).save(any(MCQ.class));
+  }
 
-    @Test
-    void testIngestUpdateExistingSeries() {
-        UUID seriesId = UUID.randomUUID();
-        ingestRequest.setSeriesId(seriesId);
+  @Test
+  void testIngestUpdateExistingSeries() {
+    UUID seriesId = UUID.randomUUID();
+    ingestRequest.setSeriesId(seriesId);
 
-        Series existingSeries = new Series();
-        existingSeries.setId(seriesId);
+    Series existingSeries = new Series();
+    existingSeries.setId(seriesId);
 
-        when(seriesRepository.findById(seriesId)).thenReturn(Optional.of(existingSeries));
-        when(seriesRepository.save(any(Series.class))).thenReturn(existingSeries);
-        when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(seriesId)).thenReturn(new ArrayList<>());
+    when(seriesRepository.findById(seriesId)).thenReturn(Optional.of(existingSeries));
+    when(seriesRepository.save(any(Series.class))).thenReturn(existingSeries);
+    when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(seriesId))
+        .thenReturn(new ArrayList<>());
 
-        when(episodeRepository.save(any(Episode.class))).thenAnswer(i -> i.getArgument(0));
-        when(mcqRepository.findByEpisodeId(any())).thenReturn(Optional.empty());
+    when(episodeRepository.save(any(Episode.class))).thenAnswer(i -> i.getArgument(0));
+    when(mcqRepository.findByEpisodeId(any())).thenReturn(Optional.empty());
 
-        ingestionService.ingestContent(ingestRequest);
+    ingestionService.ingestContent(ingestRequest);
 
-        verify(seriesRepository, times(1)).findById(seriesId);
-        verify(seriesRepository, times(1)).save(existingSeries);
-    }
+    verify(seriesRepository, times(1)).findById(seriesId);
+    verify(seriesRepository, times(1)).save(existingSeries);
+  }
 }

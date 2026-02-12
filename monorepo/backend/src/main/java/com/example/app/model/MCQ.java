@@ -12,76 +12,79 @@ import java.util.UUID;
 @Table(name = "mcq")
 public class MCQ {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.AUTO)
+  private UUID id;
 
-    @Column(name = "episode_id", nullable = false, unique = true)
-    @NotNull(message = "Episode ID is required")
-    private UUID episodeId;
+  @Column(name = "episode_id", nullable = false, unique = true)
+  @NotNull(message = "Episode ID is required")
+  private UUID episodeId;
 
-    @Column(nullable = false, length = 1000)
-    @NotNull(message = "Question is required")
-    @Size(min = 5, max = 1000, message = "Question must be between 5 and 1000 characters")
-    private String question;
+  @Column(nullable = false, length = 1000)
+  @NotNull(message = "Question is required")
+  @Size(min = 5, max = 1000, message = "Question must be between 5 and 1000 characters")
+  private String question;
 
-    @Column(length = 500)
-    @Size(max = 500, message = "Refresher video URL must not exceed 500 characters")
-    private String refresherVideoUrl;
+  @Column(length = 500)
+  @Size(max = 500, message = "Refresher video URL must not exceed 500 characters")
+  private String refresherVideoUrl;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+  @Column(nullable = false)
+  private LocalDateTime createdAt = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "mcq", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<MCQOption> options = new ArrayList<>();
+  @OneToMany(
+      mappedBy = "mcq",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  private List<MCQOption> options = new ArrayList<>();
 
-    public MCQ() {
-    }
+  public MCQ() {}
 
-    public MCQ(UUID episodeId, String question, String refresherVideoUrl) {
-        this.episodeId = episodeId;
-        this.question = question;
-        this.refresherVideoUrl = refresherVideoUrl;
-        this.createdAt = LocalDateTime.now();
-    }
+  public MCQ(UUID episodeId, String question, String refresherVideoUrl) {
+    this.episodeId = episodeId;
+    this.question = question;
+    this.refresherVideoUrl = refresherVideoUrl;
+    this.createdAt = LocalDateTime.now();
+  }
 
-    public UUID getId() {
-        return id;
-    }
+  public UUID getId() {
+    return id;
+  }
 
-    public UUID getEpisodeId() {
-        return episodeId;
-    }
+  public UUID getEpisodeId() {
+    return episodeId;
+  }
 
-    public void setEpisodeId(UUID episodeId) {
-        this.episodeId = episodeId;
-    }
+  public void setEpisodeId(UUID episodeId) {
+    this.episodeId = episodeId;
+  }
 
-    public String getQuestion() {
-        return question;
-    }
+  public String getQuestion() {
+    return question;
+  }
 
-    public void setQuestion(String question) {
-        this.question = question;
-    }
+  public void setQuestion(String question) {
+    this.question = question;
+  }
 
-    public String getRefresherVideoUrl() {
-        return refresherVideoUrl;
-    }
+  public String getRefresherVideoUrl() {
+    return refresherVideoUrl;
+  }
 
-    public void setRefresherVideoUrl(String refresherVideoUrl) {
-        this.refresherVideoUrl = refresherVideoUrl;
-    }
+  public void setRefresherVideoUrl(String refresherVideoUrl) {
+    this.refresherVideoUrl = refresherVideoUrl;
+  }
 
-    public List<MCQOption> getOptions() {
-        return options;
-    }
+  public List<MCQOption> getOptions() {
+    return options;
+  }
 
-    public void setOptions(List<MCQOption> options) {
-        this.options = options;
-    }
+  public void setOptions(List<MCQOption> options) {
+    this.options = options;
+  }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
 }
