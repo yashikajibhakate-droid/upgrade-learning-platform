@@ -84,7 +84,7 @@ const VerifyOtpPage = () => {
                     localStorage.setItem('authToken', response.data.token);
                     localStorage.setItem('userEmail', email);
 
-                    const from = location.state?.from?.pathname || location.state?.from;
+                    const from = location.state?.from;
 
                     if (from) {
                         navigate(from, { replace: true });

@@ -67,7 +67,7 @@ public class DailyReminderJob {
         logger.info("Daily reminder job completed.");
     }
 
-    private void processUserReminder(User user) {
+    public void processUserReminder(User user) {
         String email = user.getEmail();
 
         // 1. Check for Continue Watching (Resume)
