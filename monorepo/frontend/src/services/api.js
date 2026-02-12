@@ -24,7 +24,9 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         const isVerifyOtp = error.config && error.config.url && error.config.url.includes('/api/auth/verify-otp');
-        if (error.response && error.response.status === 401 && !isVerifyOtp) {
+        const isMagicLogin = error.config && error.config.url && error.config.url.includes('/api/auth/magic-login');
+
+        if (error.response && error.response.status === 401 && !isVerifyOtp && !isMagicLogin) {
             localStorage.removeItem('authToken');
             localStorage.removeItem('userEmail');
             window.location.href = '/login';

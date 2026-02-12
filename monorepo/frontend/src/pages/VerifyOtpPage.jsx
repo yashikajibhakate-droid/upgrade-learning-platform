@@ -84,7 +84,11 @@ const VerifyOtpPage = () => {
                     localStorage.setItem('authToken', response.data.token);
                     localStorage.setItem('userEmail', email);
 
-                    if (response.data.hasInterests) {
+                    const from = location.state?.from?.pathname || location.state?.from;
+
+                    if (from) {
+                        navigate(from, { replace: true });
+                    } else if (response.data.hasInterests) {
                         navigate('/recommendations', { state: { email } });
                     } else {
                         navigate('/onboarding', { state: { email } });
@@ -177,7 +181,7 @@ const VerifyOtpPage = () => {
 
                         <button
                             type="button"
-                            onClick={() => navigate('/login')}
+                            onClick={() => navigate('/login', { state: { from: location.state?.from } })}
                             className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
                         >
                             Back to email

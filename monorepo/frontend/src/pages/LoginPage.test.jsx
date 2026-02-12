@@ -12,6 +12,7 @@ vi.mock('react-router-dom', async () => {
     return {
         ...actual,
         useNavigate: () => mockNavigate,
+        useLocation: () => ({ state: { from: '/protected' } }),
     };
 });
 
@@ -58,7 +59,7 @@ describe('LoginPage', () => {
 
         await waitFor(() => {
             expect(api.post).toHaveBeenCalledWith('/api/auth/generate-otp', { email: 'test@example.com' });
-            expect(mockNavigate).toHaveBeenCalledWith('/verify-otp', { state: { email: 'test@example.com' } });
+            expect(mockNavigate).toHaveBeenCalledWith('/verify-otp', { state: { email: 'test@example.com', from: '/protected' } });
         });
     });
 
