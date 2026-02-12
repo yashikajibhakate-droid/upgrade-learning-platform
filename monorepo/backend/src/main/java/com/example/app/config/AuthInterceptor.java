@@ -11,12 +11,15 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
-  @Autowired private com.example.app.service.AuthService authService;
+  @Autowired
+  private com.example.app.service.AuthService authService;
 
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {
-    if (request.getMethod().equals("OPTIONS")) return true;
+    System.out.println("Processing request: " + request.getRequestURI() + " Method: " + request.getMethod());
+    if (request.getMethod().equals("OPTIONS"))
+      return true;
 
     String authHeader = request.getHeader("Authorization");
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
