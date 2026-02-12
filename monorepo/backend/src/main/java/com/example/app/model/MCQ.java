@@ -30,7 +30,7 @@ public class MCQ {
     private String refresherVideoUrl;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "mcq", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MCQOption> options = new ArrayList<>();
