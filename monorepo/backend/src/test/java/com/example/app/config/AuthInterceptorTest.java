@@ -19,13 +19,17 @@ import org.mockito.MockitoAnnotations;
 
 class AuthInterceptorTest {
 
-  @Mock private com.example.app.service.AuthService authService;
+  @Mock
+  private com.example.app.service.AuthService authService;
 
-  @Mock private HttpServletRequest request;
+  @Mock
+  private HttpServletRequest request;
 
-  @Mock private HttpServletResponse response;
+  @Mock
+  private HttpServletResponse response;
 
-  @InjectMocks private AuthInterceptor authInterceptor;
+  @InjectMocks
+  private AuthInterceptor authInterceptor;
 
   @BeforeEach
   void setUp() {
@@ -43,8 +47,8 @@ class AuthInterceptorTest {
 
   @Test
   void preHandle_ProtectedPath_NoToken_ShouldFail() throws Exception {
-    when(request.getMethod()).thenReturn("GET");
-    when(request.getRequestURI()).thenReturn("/api/series");
+    when(request.getMethod()).thenReturn("POST");
+    when(request.getRequestURI()).thenReturn("/api/series/some-uuid/reviews");
     when(request.getHeader("Authorization")).thenReturn(null);
 
     boolean result = authInterceptor.preHandle(request, response, new Object());
@@ -55,8 +59,8 @@ class AuthInterceptorTest {
 
   @Test
   void preHandle_ProtectedPath_InvalidToken_ShouldFail() throws Exception {
-    when(request.getMethod()).thenReturn("GET");
-    when(request.getRequestURI()).thenReturn("/api/series");
+    when(request.getMethod()).thenReturn("POST");
+    when(request.getRequestURI()).thenReturn("/api/series/some-uuid/reviews");
     when(request.getHeader("Authorization")).thenReturn("Bearer invalid-token");
     when(authService.getSession(anyString())).thenReturn(Optional.empty());
 
