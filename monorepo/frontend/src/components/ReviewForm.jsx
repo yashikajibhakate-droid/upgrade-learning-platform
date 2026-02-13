@@ -1,22 +1,43 @@
-import React, { useState } from 'react';
-import { Star, Send, Loader } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, Send, Loader, X } from 'lucide-react';
 
-const ReviewForm = ({ onSubmit, loading }) => {
-    const [rating, setRating] = useState(0);
+const ReviewForm = ({ onSubmit, loading, initialData, isEditMode = false, onCancel }) => {
+    const [rating, setRating] = useState(initialData?.rating || 0);
     const [hoverRating, setHoverRating] = useState(0);
-    const [comment, setComment] = useState('');
+    const [comment, setComment] = useState(initialData?.comment || '');
+
+    useEffect(() => {
+        if (initialData) {
+            setRating(initialData.rating || 0);
+            setComment(initialData.comment || '');
+        }
+    }, [initialData]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (rating === 0) return;
         onSubmit({ rating, comment });
-        setRating(0);
-        setComment('');
+        if (!isEditMode) {
+            setRating(0);
+            setComment('');
+        }
     };
 
     return (
         <form onSubmit={handleSubmit} className="bg-gray-800/50 p-6 rounded-2xl border border-gray-700/50 space-y-4">
-            <h4 className="text-lg font-semibold">Write a Review</h4>
+            <div className="flex items-center justify-between">
+                <h4 className="text-lg font-semibold">{isEditMode ? 'Edit Your Review' : 'Write a Review'}</h4>
+                {isEditMode && onCancel && (
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="text-gray-400 hover:text-white transition-colors"
+                        aria-label="Cancel edit"
+                    >
+                        <X size={20} />
+                    </button>
+                )}
+            </div>
 
             <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -31,8 +52,8 @@ const ReviewForm = ({ onSubmit, loading }) => {
                         <Star
                             size={28}
                             className={`${star <= (hoverRating || rating)
-                                    ? 'fill-yellow-400 text-yellow-400'
-                                    : 'text-gray-500'
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-500'
                                 } transition-colors`}
                         />
                     </button>
@@ -50,14 +71,25 @@ const ReviewForm = ({ onSubmit, loading }) => {
                 required
             />
 
-            <button
-                type="submit"
-                disabled={loading || rating === 0}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
-            >
-                {loading ? <Loader className="animate-spin" size={20} /> : <Send size={20} />}
-                Submit Review
-            </button>
+            <div className="flex gap-3">
+                <button
+                    type="submit"
+                    disabled={loading || rating === 0}
+                    className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                >
+                    {loading ? <Loader className="animate-spin" size={20} /> : <Send size={20} />}
+                    {isEditMode ? 'Update Review' : 'Submit Review'}
+                </button>
+                {isEditMode && onCancel && (
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl font-bold transition-all"
+                    >
+                        Cancel
+                    </button>
+                )}
+            </div>
         </form>
     );
 };

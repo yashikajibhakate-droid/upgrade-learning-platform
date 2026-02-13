@@ -24,7 +24,10 @@ const SeriesReviewList = ({ reviews }) => {
                                     {review.reviewerName}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                    {new Date(review.createdAt).toLocaleDateString()}
+                                    {new Date(review.updatedAt || review.createdAt).toLocaleDateString()}
+                                    {review.updatedAt && (
+                                        <span className="ml-1.5 text-gray-600 italic">(edited)</span>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -21,54 +21,54 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(SeriesController.class)
 class SeriesControllerTest {
 
-  @Autowired
-  private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-  @MockBean
-  private SeriesService seriesService;
-  @MockBean
-  private com.example.app.service.SeriesReviewService seriesReviewService;
+    @MockBean
+    private SeriesService seriesService;
+    @MockBean
+    private com.example.app.service.SeriesReviewService seriesReviewService;
 
-  // Mocking dependencies required by WebConfig/AuthInterceptor
-  @MockBean
-  private com.example.app.service.UserService userService;
-  @MockBean
-  private com.example.app.config.AuthInterceptor authInterceptor;
+    // Mocking dependencies required by WebConfig/AuthInterceptor
+    @MockBean
+    private com.example.app.service.UserService userService;
+    @MockBean
+    private com.example.app.config.AuthInterceptor authInterceptor;
 
-  @BeforeEach
-  void setUp() throws Exception {
-    when(authInterceptor.preHandle(any(), any(), any())).thenReturn(true);
-  }
+    @BeforeEach
+    void setUp() throws Exception {
+        when(authInterceptor.preHandle(any(), any(), any())).thenReturn(true);
+    }
 
-  @Test
-  void testGetEpisodes_Success() throws Exception {
-    UUID seriesId = UUID.randomUUID();
-    Episode episode = new Episode();
-    episode.setTitle("Test Episode");
-    episode.setSequenceNumber(1);
+    @Test
+    void testGetEpisodes_Success() throws Exception {
+        UUID seriesId = UUID.randomUUID();
+        Episode episode = new Episode();
+        episode.setTitle("Test Episode");
+        episode.setSequenceNumber(1);
 
-    when(seriesService.getEpisodesForSeries(seriesId)).thenReturn(List.of(episode));
+        when(seriesService.getEpisodesForSeries(seriesId)).thenReturn(List.of(episode));
 
-    mockMvc
-        .perform(get("/api/series/" + seriesId + "/episodes"))
-        .andExpect(status().isOk())
-        .andExpect(
-            org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$[0].title")
-                .value("Test Episode"))
-        .andExpect(
-            org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
-                "$[0].sequenceNumber")
-                .value(1));
-  }
+        mockMvc
+                .perform(get("/api/series/" + seriesId + "/episodes"))
+                .andExpect(status().isOk())
+                .andExpect(
+                        org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$[0].title")
+                                .value("Test Episode"))
+                .andExpect(
+                        org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath(
+                                "$[0].sequenceNumber")
+                                .value(1));
+    }
 
-  @Test
-  void testGetEpisodes_Empty() throws Exception {
-    UUID seriesId = UUID.randomUUID();
-    when(seriesService.getEpisodesForSeries(seriesId)).thenReturn(Collections.emptyList());
+    @Test
+    void testGetEpisodes_Empty() throws Exception {
+        UUID seriesId = UUID.randomUUID();
+        when(seriesService.getEpisodesForSeries(seriesId)).thenReturn(Collections.emptyList());
 
-    mockMvc
-        .perform(get("/api/series/" + seriesId + "/episodes"))
-        .andExpect(status().isOk())
-        .andExpect(content().json("[]"));
-  }
+        mockMvc
+                .perform(get("/api/series/" + seriesId + "/episodes"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
 }
