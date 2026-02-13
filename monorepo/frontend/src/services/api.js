@@ -64,6 +64,7 @@ export const mcqApi = {
 // Series Review API Methods
 export const seriesReviewApi = {
     submitReview: (seriesId, reviewData) => api.post(`/api/series/${seriesId}/reviews`, reviewData),
+    updateReview: (seriesId, reviewData) => api.put(`/api/series/${seriesId}/reviews`, reviewData),
     getReviews: (seriesId) => api.get(`/api/series/${seriesId}/reviews`),
 };
 

@@ -45,6 +45,12 @@ public class SeriesReview {
   @Column(nullable = false)
   private LocalDateTime createdAt;
 
+  @Column
+  private LocalDateTime updatedAt;
+
+  @Column(nullable = false)
+  private boolean flagged = false;
+
   public SeriesReview() {
   }
 
@@ -62,6 +68,7 @@ public class SeriesReview {
     this.progressPercentage = progressPercentage;
     this.isVerified = isVerified;
     this.createdAt = LocalDateTime.now();
+    this.flagged = false;
   }
 
   public UUID getId() {
@@ -122,6 +129,22 @@ public class SeriesReview {
 
   public void setCreatedAt(LocalDateTime createdAt) {
     this.createdAt = createdAt;
+  }
+
+  public LocalDateTime getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(LocalDateTime updatedAt) {
+    this.updatedAt = updatedAt;
+  }
+
+  public boolean isFlagged() {
+    return flagged;
+  }
+
+  public void setFlagged(boolean flagged) {
+    this.flagged = flagged;
   }
 
   public String getMaskedUserEmail() {
