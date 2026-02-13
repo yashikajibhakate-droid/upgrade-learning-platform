@@ -48,7 +48,7 @@ public class SeriesReview {
   @Column
   private LocalDateTime updatedAt;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "boolean default false")
   private boolean flagged = false;
 
   public SeriesReview() {
