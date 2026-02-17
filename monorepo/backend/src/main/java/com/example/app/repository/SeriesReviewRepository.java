@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface SeriesReviewRepository extends JpaRepository<SeriesReview, UUID> {
   List<SeriesReview> findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(UUID seriesId);
 
+  List<SeriesReview> findBySeriesIdAndDeletedFalseOrderByCreatedAtAsc(UUID seriesId);
+
   List<SeriesReview> findBySeriesIdAndDeletedFalse(UUID seriesId);
 
   Optional<SeriesReview> findByUserEmailAndSeriesId(String userEmail, UUID seriesId);

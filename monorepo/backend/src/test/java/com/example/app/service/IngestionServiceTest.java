@@ -27,17 +27,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class IngestionServiceTest {
 
-  @Mock
-  private SeriesRepository seriesRepository;
+  @Mock private SeriesRepository seriesRepository;
 
-  @Mock
-  private EpisodeRepository episodeRepository;
+  @Mock private EpisodeRepository episodeRepository;
 
-  @Mock
-  private MCQRepository mcqRepository;
+  @Mock private MCQRepository mcqRepository;
 
-  @InjectMocks
-  private IngestionService ingestionService;
+  @InjectMocks private IngestionService ingestionService;
 
   private IngestRequest ingestRequest;
 

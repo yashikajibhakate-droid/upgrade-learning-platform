@@ -82,16 +82,42 @@ class SeriesReviewServiceTest {
   }
 
   @Test
-  void getReviewsForSeries_ShouldReturnOrderedReviews() {
+  void getReviewsForSeries_ShouldReturnRecentFirst_WhenSortIsNull() {
     UUID seriesId = UUID.randomUUID();
     List<SeriesReview> mockReviews = List.of(new SeriesReview());
     when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId))
         .thenReturn(mockReviews);
 
-    List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId);
+    List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId, null);
 
     assertEquals(1, result.size());
     verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId);
+  }
+
+  @Test
+  void getReviewsForSeries_ShouldReturnRecentFirst_WhenSortIsRecent() {
+    UUID seriesId = UUID.randomUUID();
+    List<SeriesReview> mockReviews = List.of(new SeriesReview());
+    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId))
+        .thenReturn(mockReviews);
+
+    List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId, "recent");
+
+    assertEquals(1, result.size());
+    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId);
+  }
+
+  @Test
+  void getReviewsForSeries_ShouldReturnOldestFirst_WhenSortIsOldest() {
+    UUID seriesId = UUID.randomUUID();
+    List<SeriesReview> mockReviews = List.of(new SeriesReview());
+    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtAsc(seriesId))
+        .thenReturn(mockReviews);
+
+    List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId, "oldest");
+
+    assertEquals(1, result.size());
+    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByCreatedAtAsc(seriesId);
   }
 
   @Test
