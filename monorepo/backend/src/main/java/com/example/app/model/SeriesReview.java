@@ -51,6 +51,9 @@ public class SeriesReview {
   @Column(nullable = false, columnDefinition = "boolean default false")
   private boolean flagged = false;
 
+  @Column(nullable = false, columnDefinition = "boolean default false")
+  private boolean deleted = false;
+
   public SeriesReview() {
   }
 
@@ -69,6 +72,7 @@ public class SeriesReview {
     this.isVerified = isVerified;
     this.createdAt = LocalDateTime.now();
     this.flagged = false;
+    this.deleted = false;
   }
 
   public UUID getId() {
@@ -145,6 +149,14 @@ public class SeriesReview {
 
   public void setFlagged(boolean flagged) {
     this.flagged = flagged;
+  }
+
+  public boolean isDeleted() {
+    return deleted;
+  }
+
+  public void setDeleted(boolean deleted) {
+    this.deleted = deleted;
   }
 
   public String getMaskedUserEmail() {

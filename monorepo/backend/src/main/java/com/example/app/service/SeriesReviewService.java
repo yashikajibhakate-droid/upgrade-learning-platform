@@ -67,11 +67,27 @@ public class SeriesReviewService {
 
   public boolean isEditable(SeriesReview review) {
     return !review.isFlagged()
+        && !review.isDeleted()
         && review.getCreatedAt().plusHours(editWindowHours).isAfter(LocalDateTime.now());
+  }
+
+  @Transactional
+  public void deleteReview(String userEmail, UUID seriesId) {
+    SeriesReview review = seriesReviewRepository
+        .findByUserEmailAndSeriesId(userEmail, seriesId)
+        .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
+
+    if (review.isDeleted()) {
+      throw new IllegalStateException("Review is already deleted.");
+    }
+
+    review.setDeleted(true);
+    review.setUpdatedAt(LocalDateTime.now());
+    seriesReviewRepository.save(review);
   }
 
   @Transactional(readOnly = true)
   public List<SeriesReview> getReviewsForSeries(UUID seriesId) {
-    return seriesReviewRepository.findBySeriesIdOrderByCreatedAtDesc(seriesId);
+    return seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId);
   }
 }

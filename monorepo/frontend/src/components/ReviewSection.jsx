@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { seriesReviewApi } from '../services/api';
 import ReviewForm from './ReviewForm';
 import SeriesReviewList from './SeriesReviewList';
-import { MessageSquare, Pencil } from 'lucide-react';
+import { MessageSquare, Pencil, Trash2 } from 'lucide-react';
 
 const ReviewSection = ({ seriesId, isLoggedIn }) => {
     const [reviews, setReviews] = useState([]);
@@ -12,6 +12,7 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
     const [hasReviewed, setHasReviewed] = useState(false);
     const [userReview, setUserReview] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [deleteLoading, setDeleteLoading] = useState(false);
     const [userEmail, setUserEmail] = useState(localStorage.getItem('userEmail'));
 
     const fetchReviews = async () => {
@@ -20,16 +21,14 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
             const response = await seriesReviewApi.getReviews(seriesId);
             setReviews(response.data);
 
-            // Find the current user's review (the one marked editable by the server)
+            // Find the current user's own review
             if (userEmail) {
-                const editableReview = response.data.find(r => r.editable);
-                if (editableReview) {
+                const ownReview = response.data.find(r => r.isOwnReview);
+                if (ownReview) {
                     setHasReviewed(true);
-                    setUserReview(editableReview);
+                    setUserReview(ownReview);
                 } else {
-                    // User may have reviewed but the edit window expired or review was flagged
-                    const reviewed = response.data.some(r => r.userEmail === userEmail);
-                    setHasReviewed(reviewed);
+                    setHasReviewed(false);
                     setUserReview(null);
                 }
             }
@@ -81,6 +80,27 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
             setError(message);
         } finally {
             setSubmitLoading(false);
+        }
+    };
+
+    const handleDeleteReview = async () => {
+        if (!window.confirm('Are you sure you want to delete your review? This action cannot be undone and you will not be able to submit another review for this series.')) {
+            return;
+        }
+        try {
+            setDeleteLoading(true);
+            await seriesReviewApi.deleteReview(seriesId);
+            setHasReviewed(true);
+            setUserReview(null);
+            setIsEditing(false);
+            await fetchReviews();
+            setError(null);
+        } catch (err) {
+            console.error('Failed to delete review:', err);
+            const message = err.response?.data?.error || 'Failed to delete review. Please try again.';
+            setError(message);
+        } finally {
+            setDeleteLoading(false);
         }
     };
 
@@ -138,13 +158,32 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
                     You have already shared your feedback for this series. Thank you!
                 </p>
                 {userReview ? (
-                    <button
-                        onClick={() => { setIsEditing(true); setError(null); }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all text-sm"
-                    >
-                        <Pencil size={16} />
-                        Edit Review
-                    </button>
+                    <div className="flex items-center gap-3 flex-wrap justify-center">
+                        {userReview.editable && (
+                            <button
+                                onClick={() => { setIsEditing(true); setError(null); }}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all text-sm"
+                            >
+                                <Pencil size={16} />
+                                Edit Review
+                            </button>
+                        )}
+                        {userReview.deletable && (
+                            <button
+                                onClick={handleDeleteReview}
+                                disabled={deleteLoading}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl font-semibold transition-all text-sm"
+                            >
+                                <Trash2 size={16} />
+                                {deleteLoading ? 'Deleting...' : 'Delete Review'}
+                            </button>
+                        )}
+                        {!userReview.editable && !userReview.deletable && (
+                            <p className="text-xs text-gray-500">
+                                No actions available for this review.
+                            </p>
+                        )}
+                    </div>
                 ) : (
                     <p className="text-xs text-gray-500">
                         Editing is no longer available for this review.

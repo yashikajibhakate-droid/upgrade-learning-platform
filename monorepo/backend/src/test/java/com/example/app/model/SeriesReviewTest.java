@@ -62,6 +62,8 @@ class SeriesReviewTest {
         java.time.LocalDateTime.now(),
         null,
         false,
+        true,
+        true,
         true);
 
     ObjectMapper mapper = new ObjectMapper();

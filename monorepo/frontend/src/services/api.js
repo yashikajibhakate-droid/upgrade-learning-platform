@@ -65,6 +65,7 @@ export const mcqApi = {
 export const seriesReviewApi = {
     submitReview: (seriesId, reviewData) => api.post(`/api/series/${seriesId}/reviews`, reviewData),
     updateReview: (seriesId, reviewData) => api.put(`/api/series/${seriesId}/reviews`, reviewData),
+    deleteReview: (seriesId) => api.delete(`/api/series/${seriesId}/reviews`),
     getReviews: (seriesId) => api.get(`/api/series/${seriesId}/reviews`),
 };
 
