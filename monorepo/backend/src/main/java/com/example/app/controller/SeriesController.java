@@ -1,11 +1,13 @@
 package com.example.app.controller;
 
+import com.example.app.dto.SeriesRankingResponse;
 import com.example.app.dto.SeriesReviewRequest;
 import com.example.app.dto.SeriesReviewResponse;
 import com.example.app.exception.ResourceNotFoundException;
 import com.example.app.model.Series;
 import com.example.app.model.SeriesReview;
 import com.example.app.model.User;
+import com.example.app.service.RankingService;
 import com.example.app.service.SeriesReviewService;
 import com.example.app.service.SeriesService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,6 +33,8 @@ public class SeriesController {
   private SeriesService seriesService;
   @Autowired
   private SeriesReviewService seriesReviewService;
+  @Autowired
+  private RankingService rankingService;
 
   @GetMapping("/recommendations")
   public ResponseEntity<?> getRecommendations(@RequestParam String email) {
@@ -144,6 +148,12 @@ public class SeriesController {
           user.getEmail(), seriesId, e);
       throw e;
     }
+  }
+
+  @GetMapping("/{seriesId}/ranking")
+  public ResponseEntity<SeriesRankingResponse> getRanking(@PathVariable UUID seriesId) {
+    SeriesRankingResponse ranking = rankingService.calculateWeightedRankingScore(seriesId);
+    return ResponseEntity.ok(ranking);
   }
 
   private SeriesReviewResponse mapToResponse(SeriesReview review, String requestingEmail) {

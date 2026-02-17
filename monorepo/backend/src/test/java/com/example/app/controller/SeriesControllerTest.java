@@ -28,6 +28,8 @@ class SeriesControllerTest {
     private SeriesService seriesService;
     @MockBean
     private com.example.app.service.SeriesReviewService seriesReviewService;
+    @MockBean
+    private com.example.app.service.RankingService rankingService;
 
     // Mocking dependencies required by WebConfig/AuthInterceptor
     @MockBean
