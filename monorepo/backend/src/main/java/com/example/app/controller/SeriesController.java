@@ -157,6 +157,12 @@ public class SeriesController {
     return ResponseEntity.ok(ranking);
   }
 
+  @GetMapping("/{seriesId}/rating-summary")
+  public ResponseEntity<com.example.app.dto.SeriesRatingSummaryDto> getRatingSummary(
+      @PathVariable UUID seriesId) {
+    return ResponseEntity.ok(seriesReviewService.getRatingSummary(seriesId));
+  }
+
   private SeriesReviewResponse mapToResponse(SeriesReview review, String requestingEmail) {
     boolean isOwnReview = requestingEmail != null
         && requestingEmail.equals(review.getUserEmail());

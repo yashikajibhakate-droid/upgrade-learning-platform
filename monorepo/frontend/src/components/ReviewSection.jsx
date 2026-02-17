@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { seriesReviewApi } from '../services/api';
 import ReviewForm from './ReviewForm';
 import SeriesReviewList from './SeriesReviewList';
-import { MessageSquare, Pencil, Trash2 } from 'lucide-react';
+import { MessageSquare, Pencil, Trash2, Star } from 'lucide-react';
 
 const ReviewSection = ({ seriesId, isLoggedIn }) => {
     const [reviews, setReviews] = useState([]);
+    const [ratingSummary, setRatingSummary] = useState({ averageRating: null, totalReviews: 0 });
     const [loading, setLoading] = useState(true);
     const [submitLoading, setSubmitLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -20,12 +21,17 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
     const fetchReviews = async () => {
         try {
             setLoading(true);
-            const response = await seriesReviewApi.getReviews(seriesId, sortBy);
-            setReviews(response.data);
+            const [reviewsRes, summaryRes] = await Promise.all([
+                seriesReviewApi.getReviews(seriesId, sortBy),
+                seriesReviewApi.getRatingSummary(seriesId)
+            ]);
+
+            setReviews(reviewsRes.data);
+            setRatingSummary(summaryRes.data);
 
             // Find the current user's own review
             if (userEmail) {
-                const ownReview = response.data.find(r => r.isOwnReview);
+                const ownReview = reviewsRes.data.find(r => r.isOwnReview);
                 if (ownReview) {
                     setHasReviewed(true);
                     setUserReview(ownReview);
@@ -202,6 +208,28 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
 
     return (
         <div className="space-y-8 mt-12 pb-20">
+            {/* Rating Summary Header */}
+            <div className="bg-gray-800/50 p-6 rounded-2xl border border-gray-700/50 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                    <div className="bg-indigo-600/20 p-4 rounded-full">
+                        <Star className="text-indigo-400 w-8 h-8 fill-indigo-400/20" />
+                    </div>
+                    <div>
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="text-2xl font-bold text-white">
+                                {ratingSummary.averageRating ? ratingSummary.averageRating.toFixed(1) : 'No ratings'}
+                            </h3>
+                            <span className="text-gray-400 text-sm">
+                                {ratingSummary.averageRating ? '/ 5.0' : 'yet'}
+                            </span>
+                        </div>
+                        <p className="text-gray-400 text-sm">
+                            Based on {ratingSummary.totalReviews} review{ratingSummary.totalReviews !== 1 ? 's' : ''}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <div className="flex items-center justify-between border-b border-gray-800 pb-4">
                 <div className="flex items-center gap-3">
                     <MessageSquare className="text-indigo-400" size={28} />

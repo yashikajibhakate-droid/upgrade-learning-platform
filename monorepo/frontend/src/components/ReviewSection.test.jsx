@@ -10,6 +10,7 @@ vi.mock('../services/api', () => ({
         submitReview: vi.fn(),
         updateReview: vi.fn(),
         deleteReview: vi.fn(),
+        getRatingSummary: vi.fn(),
     },
 }));
 
@@ -22,7 +23,8 @@ describe('ReviewSection', () => {
             rating: 5,
             comment: 'Great!',
             createdAt: '2023-01-01',
-            isVerified: true
+            isVerified: true,
+            isOwnReview: false
         },
         {
             id: '2',
@@ -30,7 +32,8 @@ describe('ReviewSection', () => {
             rating: 4,
             comment: 'Good',
             createdAt: '2023-01-02',
-            isVerified: false
+            isVerified: false,
+            isOwnReview: false
         }
     ];
 
@@ -41,11 +44,12 @@ describe('ReviewSection', () => {
 
     it('renders reviews and default sort option', async () => {
         seriesReviewApi.getReviews.mockResolvedValue({ data: mockReviews });
+        seriesReviewApi.getRatingSummary.mockResolvedValue({ data: { averageRating: 4.5, totalReviews: 2 } });
 
         render(<ReviewSection seriesId={mockSeriesId} isLoggedIn={false} />);
 
         // Check if loading finishes
-        await waitFor(() => expect(screen.queryByText(/loading/i)).not.toBeInTheDocument()); // Assuming no text "loading" but skeleton
+        await waitFor(() => expect(screen.queryByText(/loading/i)).not.toBeInTheDocument());
 
         // Check reviews are rendered
         expect(await screen.findByText('Great!')).toBeInTheDocument();
@@ -55,8 +59,23 @@ describe('ReviewSection', () => {
         expect(seriesReviewApi.getReviews).toHaveBeenCalledWith(mockSeriesId, 'recent');
     });
 
+    it('displays rating summary', async () => {
+        seriesReviewApi.getReviews.mockResolvedValue({ data: [] });
+        seriesReviewApi.getRatingSummary.mockResolvedValue({
+            data: { averageRating: 4.5, totalReviews: 10 }
+        });
+
+        render(<ReviewSection seriesId={mockSeriesId} isLoggedIn={false} />);
+
+        // Check summary is rendered
+        expect(await screen.findByText('4.5')).toBeInTheDocument();
+        expect(screen.getByText(/Based on 10 reviews/i)).toBeInTheDocument();
+        expect(seriesReviewApi.getRatingSummary).toHaveBeenCalledWith(mockSeriesId);
+    });
+
     it('fetches reviews with "oldest" when sort is changed', async () => {
         seriesReviewApi.getReviews.mockResolvedValue({ data: mockReviews });
+        seriesReviewApi.getRatingSummary.mockResolvedValue({ data: { averageRating: 4.5, totalReviews: 2 } });
 
         render(<ReviewSection seriesId={mockSeriesId} isLoggedIn={false} />);
 

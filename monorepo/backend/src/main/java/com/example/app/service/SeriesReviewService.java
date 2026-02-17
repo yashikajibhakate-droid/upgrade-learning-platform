@@ -93,4 +93,9 @@ public class SeriesReviewService {
     }
     return seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId);
   }
+
+  @Transactional(readOnly = true)
+  public com.example.app.dto.SeriesRatingSummaryDto getRatingSummary(UUID seriesId) {
+    return seriesReviewRepository.findRatingSummaryBySeriesId(seriesId);
+  }
 }

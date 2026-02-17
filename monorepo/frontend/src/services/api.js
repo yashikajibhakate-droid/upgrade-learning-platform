@@ -67,6 +67,7 @@ export const seriesReviewApi = {
     updateReview: (seriesId, reviewData) => api.put(`/api/series/${seriesId}/reviews`, reviewData),
     deleteReview: (seriesId) => api.delete(`/api/series/${seriesId}/reviews`),
     getReviews: (seriesId, sort = 'recent') => api.get(`/api/series/${seriesId}/reviews`, { params: { sort } }),
+    getRatingSummary: (seriesId) => api.get(`/api/series/${seriesId}/rating-summary`),
 };
 
 export default api;
