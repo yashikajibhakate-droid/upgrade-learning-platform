@@ -14,5 +14,7 @@ public record SeriesReviewResponse(
                 LocalDateTime createdAt,
                 LocalDateTime updatedAt,
                 boolean flagged,
-                boolean editable) {
+                boolean editable,
+                boolean isOwnReview,
+                boolean deletable) {
 }

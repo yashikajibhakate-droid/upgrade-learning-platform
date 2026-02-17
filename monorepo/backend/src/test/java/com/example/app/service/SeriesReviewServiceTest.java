@@ -85,13 +85,13 @@ class SeriesReviewServiceTest {
   void getReviewsForSeries_ShouldReturnOrderedReviews() {
     UUID seriesId = UUID.randomUUID();
     List<SeriesReview> mockReviews = List.of(new SeriesReview());
-    when(seriesReviewRepository.findBySeriesIdOrderByCreatedAtDesc(seriesId))
+    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId))
         .thenReturn(mockReviews);
 
     List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId);
 
     assertEquals(1, result.size());
-    verify(seriesReviewRepository).findBySeriesIdOrderByCreatedAtDesc(seriesId);
+    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId);
   }
 
   @Test
@@ -188,5 +188,84 @@ class SeriesReviewServiceTest {
     review.setFlagged(true);
 
     assertFalse(seriesReviewService.isEditable(review));
+  }
+
+  @Test
+  void isEditable_ShouldReturnFalse_WhenDeleted() {
+    SeriesReview review = new SeriesReview();
+    review.setCreatedAt(LocalDateTime.now().minusHours(1));
+    review.setFlagged(false);
+    review.setDeleted(true);
+
+    assertFalse(seriesReviewService.isEditable(review));
+  }
+
+  // --- Delete Review Tests ---
+
+  @Test
+  void deleteReview_ShouldSoftDelete_WhenReviewExists() {
+    String email = "user@example.com";
+    UUID seriesId = UUID.randomUUID();
+    SeriesReview existing = new SeriesReview(email, seriesId, 4, "Nice!", 90.0, true);
+    existing.setCreatedAt(LocalDateTime.now().minusHours(1));
+
+    when(seriesReviewRepository.findByUserEmailAndSeriesId(email, seriesId))
+        .thenReturn(Optional.of(existing));
+    when(seriesReviewRepository.save(any(SeriesReview.class))).thenAnswer(i -> i.getArguments()[0]);
+
+    seriesReviewService.deleteReview(email, seriesId);
+
+    assertTrue(existing.isDeleted());
+    assertNotNull(existing.getUpdatedAt());
+    verify(seriesReviewRepository).save(existing);
+  }
+
+  @Test
+  void deleteReview_ShouldThrow_WhenReviewNotFound() {
+    String email = "user@example.com";
+    UUID seriesId = UUID.randomUUID();
+
+    when(seriesReviewRepository.findByUserEmailAndSeriesId(email, seriesId))
+        .thenReturn(Optional.empty());
+
+    assertThrows(
+        ResourceNotFoundException.class,
+        () -> seriesReviewService.deleteReview(email, seriesId));
+
+    verify(seriesReviewRepository, never()).save(any());
+  }
+
+  @Test
+  void deleteReview_ShouldThrow_WhenAlreadyDeleted() {
+    String email = "user@example.com";
+    UUID seriesId = UUID.randomUUID();
+    SeriesReview existing = new SeriesReview(email, seriesId, 4, "Nice!", 90.0, true);
+    existing.setCreatedAt(LocalDateTime.now().minusHours(1));
+    existing.setDeleted(true);
+
+    when(seriesReviewRepository.findByUserEmailAndSeriesId(email, seriesId))
+        .thenReturn(Optional.of(existing));
+
+    IllegalStateException ex = assertThrows(
+        IllegalStateException.class,
+        () -> seriesReviewService.deleteReview(email, seriesId));
+
+    assertEquals("Review is already deleted.", ex.getMessage());
+    verify(seriesReviewRepository, never()).save(any());
+  }
+
+  @Test
+  void submitReview_ShouldThrow_WhenDeletedReviewExists() {
+    String email = "user@example.com";
+    UUID seriesId = UUID.randomUUID();
+    // existsByUserEmailAndSeriesId is NOT filtered by deleted — blocks
+    // re-submission
+    when(seriesReviewRepository.existsByUserEmailAndSeriesId(email, seriesId)).thenReturn(true);
+
+    assertThrows(
+        IllegalStateException.class,
+        () -> seriesReviewService.submitReview(email, seriesId, 5, "Re-submit after delete"));
+
+    verify(seriesReviewRepository, never()).save(any());
   }
 }

@@ -121,10 +121,36 @@ public class SeriesController {
     return ResponseEntity.ok(response);
   }
 
+  @DeleteMapping("/{seriesId}/reviews")
+  public ResponseEntity<?> deleteReview(
+      HttpServletRequest request,
+      @PathVariable UUID seriesId) {
+
+    User user = (User) request.getAttribute("user");
+    if (user == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+          .body(Map.of("error", "Authentication required"));
+    }
+
+    try {
+      seriesReviewService.deleteReview(user.getEmail(), seriesId);
+      return ResponseEntity.noContent().build();
+    } catch (ResourceNotFoundException e) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+    } catch (IllegalStateException e) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+    } catch (Exception e) {
+      log.error("Unexpected error in deleteReview for user {} and series {}",
+          user.getEmail(), seriesId, e);
+      throw e;
+    }
+  }
+
   private SeriesReviewResponse mapToResponse(SeriesReview review, String requestingEmail) {
-    boolean editable = requestingEmail != null
-        && requestingEmail.equals(review.getUserEmail())
-        && seriesReviewService.isEditable(review);
+    boolean isOwnReview = requestingEmail != null
+        && requestingEmail.equals(review.getUserEmail());
+    boolean editable = isOwnReview && seriesReviewService.isEditable(review);
+    boolean deletable = isOwnReview && !review.isDeleted();
 
     return new SeriesReviewResponse(
         review.getId(),
@@ -137,6 +163,8 @@ public class SeriesController {
         review.getCreatedAt(),
         review.getUpdatedAt(),
         review.isFlagged(),
-        editable);
+        editable,
+        isOwnReview,
+        deletable);
   }
 }

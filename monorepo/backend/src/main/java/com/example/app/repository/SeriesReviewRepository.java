@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SeriesReviewRepository extends JpaRepository<SeriesReview, UUID> {
-  List<SeriesReview> findBySeriesIdOrderByCreatedAtDesc(UUID seriesId);
+  List<SeriesReview> findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(UUID seriesId);
 
   Optional<SeriesReview> findByUserEmailAndSeriesId(String userEmail, UUID seriesId);
 
