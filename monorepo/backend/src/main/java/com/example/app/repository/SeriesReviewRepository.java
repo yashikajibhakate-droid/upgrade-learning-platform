@@ -18,4 +18,9 @@ public interface SeriesReviewRepository extends JpaRepository<SeriesReview, UUID
   Optional<SeriesReview> findByUserEmailAndSeriesId(String userEmail, UUID seriesId);
 
   boolean existsByUserEmailAndSeriesId(String userEmail, UUID seriesId);
+
+  @org.springframework.data.jpa.repository.Query("SELECT new com.example.app.dto.SeriesRatingSummaryDto(AVG(r.rating), COUNT(r)) "
+      +
+      "FROM SeriesReview r WHERE r.seriesId = :seriesId AND r.deleted = false")
+  com.example.app.dto.SeriesRatingSummaryDto findRatingSummaryBySeriesId(UUID seriesId);
 }
