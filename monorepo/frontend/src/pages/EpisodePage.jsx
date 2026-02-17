@@ -441,49 +441,51 @@ const EpisodePage = () => {
                 <div className="lg:col-span-2 space-y-4">
                     {currentEpisode ? (
                         <>
-                            <VideoPlayer
-                                key={playingRefresher ? 'refresher' : currentEpisode.id}
-                                src={playingRefresher ? refresherVideoUrl : currentEpisode.videoUrl}
-                                poster={series.thumbnailUrl}
-                                title={playingRefresher ? 'Refresher Video' : currentEpisode.title}
-                                initialTime={playingRefresher ? 0 : initialTime}
-                                onProgressUpdate={playingRefresher ? undefined : handleProgressUpdate}
-                                onEnded={playingRefresher ? handleRefresherEnded : handleEpisodeEnded}
-                                autoPlay={true}
-                            />
+                            <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
+                                <VideoPlayer
+                                    key={playingRefresher ? 'refresher' : currentEpisode.id}
+                                    src={playingRefresher ? refresherVideoUrl : currentEpisode.videoUrl}
+                                    poster={series.thumbnailUrl}
+                                    title={playingRefresher ? 'Refresher Video' : currentEpisode.title}
+                                    initialTime={playingRefresher ? 0 : initialTime}
+                                    onProgressUpdate={playingRefresher ? undefined : handleProgressUpdate}
+                                    onEnded={playingRefresher ? handleRefresherEnded : handleEpisodeEnded}
+                                    autoPlay={true}
+                                />
 
-                            {/* Countdown Overlay */}
-                            {countdown !== null && (
-                                <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-10 rounded-xl">
-                                    <h3 className="text-2xl font-bold text-white mb-4">
-                                        {isLastEpisode ? "Series Completed!" : "Up Next"}
-                                    </h3>
-                                    <div className="text-6xl font-bold text-indigo-500 mb-6 animate-pulse">
-                                        {countdown}
+                                {/* Countdown Overlay */}
+                                {countdown !== null && (
+                                    <div className="absolute inset-0 bg-black flex flex-col items-center justify-center z-20">
+                                        <h3 className="text-2xl font-bold text-white mb-4">
+                                            {isLastEpisode ? "Series Completed!" : "Up Next"}
+                                        </h3>
+                                        <div className="text-6xl font-bold text-indigo-500 mb-6 animate-pulse">
+                                            {countdown}
+                                        </div>
+                                        <p className="text-gray-300 mb-8 text-lg">
+                                            {isLastEpisode
+                                                ? "Redirecting to Home..."
+                                                : `Starting next episode in ${countdown} seconds`
+                                            }
+                                        </p>
+                                        <div className="flex gap-4">
+                                            <button
+                                                onClick={() => handleCountdownComplete()}
+                                                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                                            >
+                                                {isLastEpisode ? <ArrowLeft size={20} /> : <PlayCircle size={20} />}
+                                                {isLastEpisode ? "Go Home Now" : "Play Now"}
+                                            </button>
+                                            <button
+                                                onClick={() => setCountdown(null)}
+                                                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
                                     </div>
-                                    <p className="text-gray-300 mb-8 text-lg">
-                                        {isLastEpisode
-                                            ? "Redirecting to Home..."
-                                            : `Starting next episode in ${countdown} seconds`
-                                        }
-                                    </p>
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => handleCountdownComplete()}
-                                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
-                                        >
-                                            {isLastEpisode ? <ArrowLeft size={20} /> : <PlayCircle size={20} />}
-                                            {isLastEpisode ? "Go Home Now" : "Play Now"}
-                                        </button>
-                                        <button
-                                            onClick={() => setCountdown(null)}
-                                            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
 
                             <div className="bg-gray-800 p-6 rounded-2xl">
                                 <h2 className="text-2xl font-bold mb-2">{currentEpisode.title}</h2>

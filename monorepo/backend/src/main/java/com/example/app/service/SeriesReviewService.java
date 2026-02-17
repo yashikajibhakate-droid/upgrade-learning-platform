@@ -87,7 +87,10 @@ public class SeriesReviewService {
   }
 
   @Transactional(readOnly = true)
-  public List<SeriesReview> getReviewsForSeries(UUID seriesId) {
+  public List<SeriesReview> getReviewsForSeries(UUID seriesId, String sort) {
+    if ("oldest".equalsIgnoreCase(sort)) {
+      return seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtAsc(seriesId);
+    }
     return seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId);
   }
 }

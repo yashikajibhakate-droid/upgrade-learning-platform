@@ -15,10 +15,12 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [userEmail, setUserEmail] = useState(localStorage.getItem('userEmail'));
 
+    const [sortBy, setSortBy] = useState('recent');
+
     const fetchReviews = async () => {
         try {
             setLoading(true);
-            const response = await seriesReviewApi.getReviews(seriesId);
+            const response = await seriesReviewApi.getReviews(seriesId, sortBy);
             setReviews(response.data);
 
             // Find the current user's own review
@@ -50,7 +52,7 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
         if (seriesId) {
             fetchReviews();
         }
-    }, [seriesId, userEmail]);
+    }, [seriesId, userEmail, sortBy]);
 
     const handleSubmitReview = async (reviewData) => {
         try {
@@ -93,7 +95,7 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
             setHasReviewed(true);
             setUserReview(null);
             setIsEditing(false);
-            await fetchReviews();
+            setReviews(prev => prev.filter(r => !r.isOwnReview));
             setError(null);
         } catch (err) {
             console.error('Failed to delete review:', err);
@@ -186,7 +188,7 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
                     </div>
                 ) : (
                     <p className="text-xs text-gray-500">
-                        Editing is no longer available for this review.
+                        Your review has been deleted.
                     </p>
                 )}
                 {error && (
@@ -200,12 +202,26 @@ const ReviewSection = ({ seriesId, isLoggedIn }) => {
 
     return (
         <div className="space-y-8 mt-12 pb-20">
-            <div className="flex items-center gap-3 border-b border-gray-800 pb-4">
-                <MessageSquare className="text-indigo-400" size={28} />
-                <h3 className="text-2xl font-bold">Community Reviews</h3>
-                <span className="bg-gray-800 px-3 py-1 rounded-full text-sm font-medium text-gray-400">
-                    {reviews.length}
-                </span>
+            <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+                <div className="flex items-center gap-3">
+                    <MessageSquare className="text-indigo-400" size={28} />
+                    <h3 className="text-2xl font-bold">Community Reviews</h3>
+                    <span className="bg-gray-800 px-3 py-1 rounded-full text-sm font-medium text-gray-400">
+                        {reviews.length}
+                    </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-400">Sort by:</span>
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="bg-gray-800 text-gray-300 text-sm rounded-lg border border-gray-700 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 outline-none"
+                    >
+                        <option value="recent">Most Recent</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">

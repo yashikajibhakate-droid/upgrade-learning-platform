@@ -18,17 +18,13 @@ import org.mockito.MockitoAnnotations;
 
 class AuthInterceptorTest {
 
-  @Mock
-  private com.example.app.service.AuthService authService;
+  @Mock private com.example.app.service.AuthService authService;
 
-  @Mock
-  private HttpServletRequest request;
+  @Mock private HttpServletRequest request;
 
-  @Mock
-  private HttpServletResponse response;
+  @Mock private HttpServletResponse response;
 
-  @InjectMocks
-  private AuthInterceptor authInterceptor;
+  @InjectMocks private AuthInterceptor authInterceptor;
 
   @BeforeEach
   void setUp() {

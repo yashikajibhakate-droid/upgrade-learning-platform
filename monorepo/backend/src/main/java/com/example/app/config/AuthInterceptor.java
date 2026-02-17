@@ -15,16 +15,15 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class AuthInterceptor implements HandlerInterceptor {
 
   private final AntPathMatcher pathMatcher = new AntPathMatcher();
-  private final List<String> publicPaths = Arrays.asList("/api/series/**", "/api/users/interests", "/api/health");
+  private final List<String> publicPaths =
+      Arrays.asList("/api/series/**", "/api/users/interests", "/api/health");
 
-  @Autowired
-  private com.example.app.service.AuthService authService;
+  @Autowired private com.example.app.service.AuthService authService;
 
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {
-    if (request.getMethod().equals("OPTIONS"))
-      return true;
+    if (request.getMethod().equals("OPTIONS")) return true;
 
     String path = request.getRequestURI();
     String method = request.getMethod();

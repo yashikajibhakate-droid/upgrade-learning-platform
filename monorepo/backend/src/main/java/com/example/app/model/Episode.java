@@ -25,8 +25,7 @@ public class Episode {
 
   private Integer sequenceNumber;
 
-  public Episode() {
-  }
+  public Episode() {}
 
   public Episode(
       Series series,

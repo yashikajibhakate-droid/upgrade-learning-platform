@@ -114,11 +114,12 @@ public class SeriesController {
   @GetMapping("/{seriesId}/reviews")
   public ResponseEntity<List<SeriesReviewResponse>> getReviews(
       HttpServletRequest request,
-      @PathVariable UUID seriesId) {
+      @PathVariable UUID seriesId,
+      @RequestParam(defaultValue = "recent") String sort) {
     User user = (User) request.getAttribute("user");
     String requestingEmail = user != null ? user.getEmail() : null;
 
-    List<SeriesReview> reviews = seriesReviewService.getReviewsForSeries(seriesId);
+    List<SeriesReview> reviews = seriesReviewService.getReviewsForSeries(seriesId, sort);
     List<SeriesReviewResponse> response = reviews.stream()
         .map(r -> mapToResponse(r, requestingEmail))
         .collect(Collectors.toList());

@@ -34,25 +34,25 @@ public class IngestionService {
   }
 
   /**
-   * Ingests content from the provided request.
-   * If request.seriesId is provided, it must exist.
+   * Ingests content from the provided request. If request.seriesId is provided, it must exist.
    * Otherwise, if request.seriesId is null, a new series will be created.
    *
    * @param request The ingestion request containing series and episode data.
-   * @throws com.example.app.exception.ResourceNotFoundException if seriesId is
-   *                                                             provided but not
-   *                                                             found.
+   * @throws com.example.app.exception.ResourceNotFoundException if seriesId is provided but not
+   *     found.
    */
   @Transactional
   public void ingestContent(IngestRequest request) {
     // 1. Handle Series
     Series series;
     if (request.getSeriesId() != null) {
-      series = seriesRepository
-          .findById(request.getSeriesId())
-          .orElseThrow(
-              () -> new com.example.app.exception.ResourceNotFoundException(
-                  "Series not found with ID: " + request.getSeriesId()));
+      series =
+          seriesRepository
+              .findById(request.getSeriesId())
+              .orElseThrow(
+                  () ->
+                      new com.example.app.exception.ResourceNotFoundException(
+                          "Series not found with ID: " + request.getSeriesId()));
     } else {
       series = createNewSeries(request);
     }
@@ -102,7 +102,8 @@ public class IngestionService {
       // I'll assume we can define or use an existing method.
       // Let's try to query.
       // For now, I'll fetch all episodes for series and filter.
-      List<Episode> existingEpisodes = episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
+      List<Episode> existingEpisodes =
+          episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(series.getId());
       for (Episode e : existingEpisodes) {
         if (Objects.equals(e.getSequenceNumber(), request.getSequenceNumber())) {
           episode = e;

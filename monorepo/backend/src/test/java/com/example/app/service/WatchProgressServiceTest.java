@@ -24,15 +24,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class WatchProgressServiceTest {
 
-  @Mock
-  private WatchHistoryRepository watchHistoryRepository;
-  @Mock
-  private EpisodeRepository episodeRepository;
-  @Mock
-  private SeriesRepository seriesRepository;
+  @Mock private WatchHistoryRepository watchHistoryRepository;
+  @Mock private EpisodeRepository episodeRepository;
+  @Mock private SeriesRepository seriesRepository;
 
-  @InjectMocks
-  private WatchProgressService watchProgressService;
+  @InjectMocks private WatchProgressService watchProgressService;
 
   @Test
   void testGetContinueWatching_WithIncompleteEpisode_ReturnsData() {
@@ -47,7 +43,7 @@ class WatchProgressServiceTest {
     watchHistory.setLastWatchedAt(LocalDateTime.now());
 
     when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
-        email))
+            email))
         .thenReturn(Optional.of(watchHistory));
     when(episodeRepository.findById(episodeId)).thenReturn(Optional.of(episode));
 
@@ -64,7 +60,7 @@ class WatchProgressServiceTest {
     String email = "test@example.com";
 
     when(watchHistoryRepository.findTop1ByUserEmailAndIsCompletedFalseOrderByLastWatchedAtDesc(
-        email))
+            email))
         .thenReturn(Optional.empty());
 
     Optional<ContinueWatchingResponse> result = watchProgressService.getContinueWatching(email);
@@ -228,8 +224,10 @@ class WatchProgressServiceTest {
 
     WatchHistory history1 = new WatchHistory(email, seriesId, epId1, null, false);
 
-    when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(seriesId)).thenReturn(java.util.List.of(ep1));
-    when(watchHistoryRepository.findByUserEmailAndSeriesId(email, seriesId)).thenReturn(java.util.List.of(history1));
+    when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(seriesId))
+        .thenReturn(java.util.List.of(ep1));
+    when(watchHistoryRepository.findByUserEmailAndSeriesId(email, seriesId))
+        .thenReturn(java.util.List.of(history1));
 
     double progress = watchProgressService.calculateSeriesProgress(email, seriesId);
 
@@ -252,7 +250,8 @@ class WatchProgressServiceTest {
     WatchHistory history1 = new WatchHistory(email, seriesId, epId1, 50, false);
     WatchHistory history2 = new WatchHistory(email, seriesId, epId2, 90, false);
 
-    when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(seriesId)).thenReturn(java.util.List.of(ep1, ep2));
+    when(episodeRepository.findBySeriesIdOrderBySequenceNumberAsc(seriesId))
+        .thenReturn(java.util.List.of(ep1, ep2));
     when(watchHistoryRepository.findByUserEmailAndSeriesId(email, seriesId))
         .thenReturn(java.util.List.of(history1, history2));
 
