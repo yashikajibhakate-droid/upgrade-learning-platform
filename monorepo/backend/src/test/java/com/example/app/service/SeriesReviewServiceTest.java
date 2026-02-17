@@ -85,26 +85,26 @@ class SeriesReviewServiceTest {
   void getReviewsForSeries_ShouldReturnRecentFirst_WhenSortIsNull() {
     UUID seriesId = UUID.randomUUID();
     List<SeriesReview> mockReviews = List.of(new SeriesReview());
-    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId))
+    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId))
         .thenReturn(mockReviews);
 
     List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId, null);
 
     assertEquals(1, result.size());
-    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId);
+    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId);
   }
 
   @Test
   void getReviewsForSeries_ShouldReturnRecentFirst_WhenSortIsRecent() {
     UUID seriesId = UUID.randomUUID();
     List<SeriesReview> mockReviews = List.of(new SeriesReview());
-    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId))
+    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId))
         .thenReturn(mockReviews);
 
     List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId, "recent");
 
     assertEquals(1, result.size());
-    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByCreatedAtDesc(seriesId);
+    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId);
   }
 
   @Test
@@ -226,8 +226,6 @@ class SeriesReviewServiceTest {
     assertFalse(seriesReviewService.isEditable(review));
   }
 
-  // --- Delete Review Tests ---
-
   @Test
   void deleteReview_ShouldSoftDelete_WhenReviewExists() {
     String email = "user@example.com";
@@ -284,8 +282,6 @@ class SeriesReviewServiceTest {
   void submitReview_ShouldThrow_WhenDeletedReviewExists() {
     String email = "user@example.com";
     UUID seriesId = UUID.randomUUID();
-    // existsByUserEmailAndSeriesId is NOT filtered by deleted — blocks
-    // re-submission
     when(seriesReviewRepository.existsByUserEmailAndSeriesId(email, seriesId)).thenReturn(true);
 
     assertThrows(
@@ -293,5 +289,31 @@ class SeriesReviewServiceTest {
         () -> seriesReviewService.submitReview(email, seriesId, 5, "Re-submit after delete"));
 
     verify(seriesReviewRepository, never()).save(any());
+  }
+
+  @Test
+  void getReviewsForSeries_ReturnsVerifiedReviewsFirst() {
+    // Arrange
+    UUID seriesId = UUID.randomUUID();
+    String sort = "recent";
+    SeriesReview verifiedReview = new SeriesReview();
+    verifiedReview.setVerified(true);
+    verifiedReview.setCreatedAt(LocalDateTime.now().minusDays(1));
+
+    SeriesReview unverifiedReview = new SeriesReview();
+    unverifiedReview.setVerified(false);
+    unverifiedReview.setCreatedAt(LocalDateTime.now()); // Newer but unverified
+
+    List<SeriesReview> expectedReviews = List.of(verifiedReview, unverifiedReview);
+
+    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId))
+        .thenReturn(expectedReviews);
+
+    // Act
+    List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId, sort);
+
+    // Assert
+    assertEquals(expectedReviews, result);
+    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId);
   }
 }
