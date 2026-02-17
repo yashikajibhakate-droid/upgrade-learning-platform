@@ -85,26 +85,26 @@ class SeriesReviewServiceTest {
   void getReviewsForSeries_ShouldReturnRecentFirst_WhenSortIsNull() {
     UUID seriesId = UUID.randomUUID();
     List<SeriesReview> mockReviews = List.of(new SeriesReview());
-    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId))
+    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByVerifiedDescCreatedAtDesc(seriesId))
         .thenReturn(mockReviews);
 
     List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId, null);
 
     assertEquals(1, result.size());
-    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId);
+    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByVerifiedDescCreatedAtDesc(seriesId);
   }
 
   @Test
   void getReviewsForSeries_ShouldReturnRecentFirst_WhenSortIsRecent() {
     UUID seriesId = UUID.randomUUID();
     List<SeriesReview> mockReviews = List.of(new SeriesReview());
-    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId))
+    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByVerifiedDescCreatedAtDesc(seriesId))
         .thenReturn(mockReviews);
 
     List<SeriesReview> result = seriesReviewService.getReviewsForSeries(seriesId, "recent");
 
     assertEquals(1, result.size());
-    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId);
+    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByVerifiedDescCreatedAtDesc(seriesId);
   }
 
   @Test
@@ -306,7 +306,7 @@ class SeriesReviewServiceTest {
 
     List<SeriesReview> expectedReviews = List.of(verifiedReview, unverifiedReview);
 
-    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId))
+    when(seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByVerifiedDescCreatedAtDesc(seriesId))
         .thenReturn(expectedReviews);
 
     // Act
@@ -314,6 +314,6 @@ class SeriesReviewServiceTest {
 
     // Assert
     assertEquals(expectedReviews, result);
-    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId);
+    verify(seriesReviewRepository).findBySeriesIdAndDeletedFalseOrderByVerifiedDescCreatedAtDesc(seriesId);
   }
 }
