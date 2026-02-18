@@ -13,7 +13,7 @@ import java.util.UUID;
 public class MCQ {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @Column(name = "episode_id", nullable = false, unique = true)
@@ -32,14 +32,11 @@ public class MCQ {
   @Column(nullable = false)
   private LocalDateTime createdAt = LocalDateTime.now();
 
-  @OneToMany(
-      mappedBy = "mcq",
-      cascade = CascadeType.ALL,
-      orphanRemoval = true,
-      fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "mcq", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   private List<MCQOption> options = new ArrayList<>();
 
-  public MCQ() {}
+  public MCQ() {
+  }
 
   public MCQ(UUID episodeId, String question, String refresherVideoUrl) {
     this.episodeId = episodeId;

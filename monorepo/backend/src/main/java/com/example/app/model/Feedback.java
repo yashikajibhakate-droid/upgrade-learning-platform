@@ -7,17 +7,13 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(
-    name = "feedback",
-    uniqueConstraints = {
-      @UniqueConstraint(
-          name = "uk_feedback_user_episode",
-          columnNames = {"user_email", "episode_id"})
-    })
+@Table(name = "feedback", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_feedback_user_episode", columnNames = { "user_email", "episode_id" })
+})
 public class Feedback {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @Column(nullable = false, length = 255)
@@ -37,7 +33,8 @@ public class Feedback {
   @Column(nullable = true)
   private LocalDateTime updatedAt;
 
-  public Feedback() {}
+  public Feedback() {
+  }
 
   public Feedback(String userEmail, UUID episodeId, Boolean isHelpful) {
     this.userEmail = userEmail;

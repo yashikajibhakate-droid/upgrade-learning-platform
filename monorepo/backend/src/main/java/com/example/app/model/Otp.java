@@ -9,7 +9,7 @@ import java.util.UUID;
 public class Otp {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @Column(nullable = false)
@@ -21,7 +21,8 @@ public class Otp {
   @Column(nullable = false)
   private LocalDateTime expiryTime;
 
-  public Otp() {}
+  public Otp() {
+  }
 
   public Otp(String email, String otpCodeHash, LocalDateTime expiryTime) {
     this.email = email;
@@ -40,14 +41,14 @@ public class Otp {
   public boolean verifyOtp(String candidate) {
     try {
       String[] parts = this.otpCodeHash.split(":");
-      if (parts.length != 2) return false;
+      if (parts.length != 2)
+        return false;
       String salt = parts[0];
       String storedHash = parts[1];
 
       java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
       String content = salt + candidate;
-      byte[] computedHash =
-          digest.digest(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      byte[] computedHash = digest.digest(content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
       byte[] storedHashBytes = java.util.Base64.getDecoder().decode(storedHash);
 

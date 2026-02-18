@@ -8,7 +8,7 @@ import java.util.UUID;
 public class Episode {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @com.fasterxml.jackson.annotation.JsonIgnore
@@ -25,7 +25,8 @@ public class Episode {
 
   private Integer sequenceNumber;
 
-  public Episode() {}
+  public Episode() {
+  }
 
   public Episode(
       Series series,

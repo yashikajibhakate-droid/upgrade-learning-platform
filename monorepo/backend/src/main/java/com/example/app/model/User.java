@@ -9,7 +9,7 @@ import java.util.UUID;
 public class User {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @Column(unique = true, nullable = false)
@@ -29,7 +29,8 @@ public class User {
   @Column(name = "weight")
   private java.util.Map<String, Integer> interestWeights = new java.util.HashMap<>();
 
-  public User() {}
+  public User() {
+  }
 
   public User(String email) {
     this.email = email;

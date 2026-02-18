@@ -10,7 +10,7 @@ import java.util.UUID;
 public class MCQOption {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -32,7 +32,8 @@ public class MCQOption {
   @NotNull(message = "Sequence number is required")
   private Integer sequenceNumber;
 
-  public MCQOption() {}
+  public MCQOption() {
+  }
 
   public MCQOption(MCQ mcq, String optionText, Boolean isCorrect, Integer sequenceNumber) {
     this.mcq = mcq;

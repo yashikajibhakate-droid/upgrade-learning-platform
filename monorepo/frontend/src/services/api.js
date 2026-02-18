@@ -73,8 +73,8 @@ export const seriesReviewApi = {
 // Episode Comment API Methods
 export const episodeCommentApi = {
     getComments: (episodeId) => api.get(`/api/episodes/${episodeId}/comments`),
-    addComment: (episodeId, userEmail, content) =>
-        api.post(`/api/episodes/${episodeId}/comments`, { userEmail, content }),
+    addComment: (episodeId, content) =>
+        api.post(`/api/episodes/${episodeId}/comments`, { content }),
 };
 
 export default api;

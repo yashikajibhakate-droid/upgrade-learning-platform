@@ -16,7 +16,7 @@ import java.util.UUID;
 public class SeriesReview {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @Column(name = "user_email", nullable = false)

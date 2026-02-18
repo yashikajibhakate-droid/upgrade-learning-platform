@@ -27,6 +27,16 @@ public class EpisodeCommentService {
 
     @Transactional
     public EpisodeComment addComment(UUID episodeId, String userEmail, String content) {
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            throw new IllegalArgumentException("User email cannot be null or empty");
+        }
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("Content cannot be null or empty");
+        }
+        if (content.length() > 1000) {
+            throw new IllegalArgumentException("Content cannot exceed 1000 characters");
+        }
+
         boolean isClean = moderationService.isClean(content);
         EpisodeComment.Status status = isClean ? EpisodeComment.Status.APPROVED : EpisodeComment.Status.FLAGGED;
 

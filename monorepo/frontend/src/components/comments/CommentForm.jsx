@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Send, AlertCircle } from 'lucide-react';
+import { Send, AlertCircle, Info } from 'lucide-react';
 import { episodeCommentApi } from '../../services/api';
 
 const CommentForm = ({ episodeId, onCommentAdded }) => {
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [notice, setNotice] = useState(null);
     const userEmail = localStorage.getItem('userEmail');
 
     const handleSubmit = async (e) => {
@@ -19,11 +20,12 @@ const CommentForm = ({ episodeId, onCommentAdded }) => {
         try {
             setLoading(true);
             setError(null);
-            const response = await episodeCommentApi.addComment(episodeId, userEmail, content);
+            setNotice(null);
+            const response = await episodeCommentApi.addComment(episodeId, content);
 
             // If the comment is flagged, the backend returns it with status FLAGGED
             if (response.data.status === 'FLAGGED') {
-                alert('Your comment has been flagged for moderation and will be reviewed shortly.');
+                setNotice('Your comment has been flagged for moderation and will be reviewed shortly.');
             }
 
             setContent('');
@@ -53,7 +55,11 @@ const CommentForm = ({ episodeId, onCommentAdded }) => {
             <div className="relative">
                 <textarea
                     value={content}
-                    onChange={(e) => setContent(e.target.value)}
+                    onChange={(e) => {
+                        setContent(e.target.value);
+                        if (notice) setNotice(null);
+                        if (error) setError(null);
+                    }}
                     placeholder="Share your thoughts on this episode..."
                     className="w-full bg-gray-800/50 text-gray-200 text-sm rounded-xl border border-gray-700/50 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 p-4 min-h-[100px] resize-none outline-none transition-all placeholder:text-gray-500"
                     maxLength={1000}
@@ -67,6 +73,13 @@ const CommentForm = ({ episodeId, onCommentAdded }) => {
                 <div className="flex items-center gap-2 text-xs text-red-400 bg-red-400/10 p-3 rounded-lg">
                     <AlertCircle size={14} />
                     <span>{error}</span>
+                </div>
+            )}
+
+            {notice && (
+                <div className="flex items-center gap-2 text-xs text-yellow-400 bg-yellow-400/10 p-3 rounded-lg">
+                    <Info size={14} />
+                    <span>{notice}</span>
                 </div>
             )}
 

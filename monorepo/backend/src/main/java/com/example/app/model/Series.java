@@ -8,7 +8,7 @@ import java.util.UUID;
 public class Series {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @Column(nullable = false)
@@ -22,7 +22,8 @@ public class Series {
 
   private String thumbnailUrl;
 
-  public Series() {}
+  public Series() {
+  }
 
   public Series(String title, String description, String category, String thumbnailUrl) {
     this.title = title;

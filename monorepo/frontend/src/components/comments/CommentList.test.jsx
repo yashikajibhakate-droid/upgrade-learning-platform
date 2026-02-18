@@ -77,7 +77,7 @@ describe('CommentList', () => {
         fireEvent.click(submitBtn);
 
         // Verify API call
-        await waitFor(() => expect(episodeCommentApi.addComment).toHaveBeenCalledWith(mockEpisodeId, 'test@example.com', 'New comment'));
+        await waitFor(() => expect(episodeCommentApi.addComment).toHaveBeenCalledWith(mockEpisodeId, 'New comment'));
 
         // Verify refetch
         expect(episodeCommentApi.getComments).toHaveBeenCalledTimes(2); // Initial + after submit
