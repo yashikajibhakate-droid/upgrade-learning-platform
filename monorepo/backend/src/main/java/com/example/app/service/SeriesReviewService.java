@@ -91,7 +91,7 @@ public class SeriesReviewService {
     if ("oldest".equalsIgnoreCase(sort)) {
       return seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByCreatedAtAsc(seriesId);
     }
-    return seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByVerifiedDescCreatedAtDesc(seriesId);
+    return seriesReviewRepository.findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(seriesId);
   }
 
   @Transactional(readOnly = true)

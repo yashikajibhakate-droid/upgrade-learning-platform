@@ -15,7 +15,7 @@ public interface SeriesReviewRepository extends JpaRepository<SeriesReview, UUID
 
   List<SeriesReview> findBySeriesIdAndDeletedFalseOrderByCreatedAtAsc(UUID seriesId);
 
-  List<SeriesReview> findBySeriesIdAndDeletedFalseOrderByVerifiedDescCreatedAtDesc(UUID seriesId);
+  List<SeriesReview> findBySeriesIdAndDeletedFalseOrderByIsVerifiedDescCreatedAtDesc(UUID seriesId);
 
   List<SeriesReview> findBySeriesIdAndDeletedFalse(UUID seriesId);
 
