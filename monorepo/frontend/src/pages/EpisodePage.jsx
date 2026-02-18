@@ -5,6 +5,7 @@ import VideoPlayer from '../components/VideoPlayer';
 import FeedbackModal from '../components/FeedbackModal';
 import MCQModal from '../components/MCQModal';
 import ReviewSection from '../components/ReviewSection';
+import CommentList from '../components/comments/CommentList';
 import { ArrowLeft, PlayCircle, Loader } from 'lucide-react';
 
 const EpisodePage = () => {
@@ -492,6 +493,10 @@ const EpisodePage = () => {
                                 <p className="text-gray-400 leading-relaxed">
                                     Episode {currentEpisode.sequenceNumber} • {formatDuration(currentEpisode.durationSeconds)}
                                 </p>
+                            </div>
+
+                            <div className="bg-gray-800 p-6 rounded-2xl">
+                                <CommentList episodeId={currentEpisode.id} />
                             </div>
                         </>
                     ) : (
